@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="NBFC Partner">
+  <circle cx="40" cy="40" r="38" fill="#f5faf8" stroke="#29b68d" stroke-width="2" />
+  <g fill="none" stroke="#245e4e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 34l18-12 18 12" />
+    <path d="M26 34v18m8-18v18m12-18v18m8-18v18" />
+    <path d="M22 52h36" />
+  </g>
+  <g fill="#29b68d">
+    <rect x="24" y="56" width="32" height="10" rx="5" opacity="0.18" />
+    <path d="M54 58c3.5 0 6 2.2 6 5s-2.5 5-6 5" opacity="0.35" />
+  </g>
+  <circle cx="40" cy="63" r="2.5" fill="#245e4e" opacity="0.55" />
+</svg>

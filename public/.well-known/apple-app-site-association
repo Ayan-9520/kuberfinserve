@@ -1,0 +1,29 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.com.kuberone.app",
+        "paths": [
+          "/app/partner",
+          "/app/partner/*",
+          "/app/open",
+          "/app/open/*",
+          "/partner-login",
+          "/partner-login/*"
+        ]
+      },
+      {
+        "appID": "TEAMID.com.kuberfinserve.app",
+        "paths": [
+          "/app/customer",
+          "/app/customer/*",
+          "/app/open",
+          "/app/open/*",
+          "/apply-loan",
+          "/apply-loan/*"
+        ]
+      }
+    ]
+  }
+}

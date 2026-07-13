@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="Financial Partner">
+  <rect x="8" y="8" width="64" height="64" rx="12" fill="#29b68d" />
+  <rect x="18" y="20" width="44" height="28" rx="6" fill="#ffffff" opacity="0.96" />
+  <rect x="22" y="26" width="18" height="5" rx="2.5" fill="#245e4e" opacity="0.35" />
+  <rect x="22" y="35" width="30" height="4" rx="2" fill="#245e4e" opacity="0.25" />
+  <rect x="22" y="41" width="24" height="4" rx="2" fill="#245e4e" opacity="0.22" />
+
+  <!-- bank/account mark -->
+  <g fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
+    <path d="M22 58l18-12 18 12" />
+    <path d="M26 58v8m8-8v8m12-8v8m8-8v8" />
+    <path d="M22 66h36" />
+  </g>
+</svg>

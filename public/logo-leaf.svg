@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Kuberfinserve">
+  <rect x="2" y="2" width="60" height="60" rx="0" fill="#ffffff" stroke="#29b68d" stroke-width="3"/>
+  <path d="M2 18 Q2 2 18 2 H62" fill="none" stroke="#29b68d" stroke-width="3"/>
+  <path d="M62 46 Q62 62 46 62 H2" fill="none" stroke="#29b68d" stroke-width="3"/>
+  <rect x="18" y="2" width="44" height="44" fill="#ffffff"/>
+  <rect x="2" y="2" width="16" height="16" rx="14" fill="#ffffff" stroke="#29b68d" stroke-width="3"/>
+  <rect x="46" y="46" width="16" height="16" rx="14" fill="#ffffff" stroke="#29b68d" stroke-width="3"/>
+  <image href="/logo.png" x="14" y="14" width="36" height="36" preserveAspectRatio="xMidYMid meet"/>
+</svg>

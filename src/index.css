@@ -1,0 +1,424 @@
+@import "tailwindcss";
+
+/* KuberFinserve premium fintech palette */
+@theme {
+  --color-brand-950: #053d32;
+  --color-brand-900: #0b5d4b;
+  --color-brand-800: #0a4f42;
+  --color-brand-700: #0d6b57;
+  --color-brand-600: #00c389;
+  --color-brand-500: #22c55e;
+  --color-brand-400: #4ade80;
+  --color-brand-200: #bbf7d0;
+  --color-brand-100: #dcfce7;
+  --color-brand-50: #f0fdf9;
+
+  --color-navy-950: #020617;
+  --color-navy-900: #0f172a;
+  --color-navy-800: #1e293b;
+  --color-navy-700: #334155;
+  --color-navy-600: #475569;
+
+  --color-silver-50: #f8fafc;
+  --color-silver-100: #f1f5f9;
+  --color-surface: #f8fafc;
+  --font-heading: "Plus Jakarta Sans", "Poppins", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-navy-900);
+    background-color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, var(--color-navy-900) 0%, var(--color-navy-700) 45%, var(--color-brand-600) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, var(--color-navy-900) 0%, var(--color-navy-800) 45%, var(--color-brand-700) 100%);
+  }
+
+  .bg-gradient-btn {
+    background: linear-gradient(135deg, var(--color-navy-800) 0%, var(--color-navy-700) 45%, var(--color-brand-600) 100%);
+  }
+
+  .glass {
+    background: rgb(255 255 255 / 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgb(15 23 42 / 0.10);
+  }
+
+  .glass-dark {
+    background: rgb(15 23 42 / 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  .bg-fintech-hero {
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 20%, rgb(0 195 137 / 0.18), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 10% 80%, rgb(11 93 75 / 0.35), transparent 50%),
+      linear-gradient(145deg, #0f172a 0%, #0b5d4b 45%, #0f172a 100%);
+  }
+
+  .bg-fintech-cta {
+    background:
+      radial-gradient(ellipse 60% 80% at 100% 0%, rgb(0 195 137 / 0.2), transparent 50%),
+      linear-gradient(135deg, #0f172a 0%, #0b5d4b 50%, #053d32 100%);
+  }
+
+  .text-gradient-fintech {
+    background: linear-gradient(135deg, #ffffff 0%, #00c389 55%, #bbf7d0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .marquee-track {
+    animation: marquee 35s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Hero: only the active fade slide shows text (prevents ghost overlap) */
+.hero-swiper.swiper-fade .swiper-slide {
+  pointer-events: none;
+  z-index: 0 !important;
+}
+
+.hero-swiper.swiper-fade .swiper-slide-active {
+  pointer-events: auto;
+  z-index: 1 !important;
+}
+
+.hero-swiper.swiper-fade .swiper-slide:not(.swiper-slide-active) .container {
+  visibility: hidden;
+}
+
+.swiper-pagination-bullet {
+  background: #fff !important;
+  opacity: 0.5 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: var(--color-brand-600) !important;
+  opacity: 1 !important;
+  width: 24px !important;
+  border-radius: 6px !important;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: #fff !important;
+  background: rgb(46 204 113 / 0.25);
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: 18px !important;
+  font-weight: bold;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Partners landing — KuberOne teal palette (dark premium fintech) */
+.partners-root {
+  --pf-bg: #071a1f;
+  --pf-bg-card: #102b2e;
+  --pf-bg-surface: #0d2428;
+  --pf-primary: #22d3a6;
+  --pf-primary-hover: #1eb892;
+  --pf-accent: #18c964;
+  --pf-text: #ffffff;
+  --pf-text-secondary: #c7d2d9;
+  --pf-text-muted: #8b9aab;
+  --pf-border: #1a3d42;
+  --pf-cta-text: #071a1f;
+  color: var(--pf-text);
+  background-color: var(--pf-bg);
+}
+
+.partners-root .pf-section-dark {
+  background-color: var(--pf-bg);
+}
+
+.partners-root .pf-section-surface {
+  background-color: var(--pf-bg-surface);
+}
+
+.partners-root .pf-section-alt {
+  background-color: var(--pf-bg-surface);
+}
+
+.partners-root .pf-section-white {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+.partners-root .pf-white-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.partners-root .pf-white-card:hover {
+  border-color: rgb(13 148 136 / 0.25);
+  box-shadow: 0 12px 32px -10px rgb(13 148 136 / 0.15);
+  transform: translateY(-2px);
+}
+
+.partners-root .pf-icon-box-light {
+  background: rgb(13 148 136 / 0.1);
+  color: #0d9488;
+}
+
+.partners-root .pf-badge-light {
+  background: rgb(13 148 136 / 0.1);
+  color: #0d9488;
+}
+
+.partners-root .pf-portal-banner-light {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 24px -8px rgb(15 23 42 / 0.08);
+}
+
+.partners-root .pf-portal-banner-light .pf-portal-title {
+  color: #0f172a;
+}
+
+.partners-root .pf-portal-banner-light .pf-portal-text {
+  color: #64748b;
+}
+
+.partners-root .pf-ncr-banner-light {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.partners-root .pf-step-card-light {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.partners-root .pf-step-card-light:hover {
+  border-color: rgb(13 148 136 / 0.3);
+  box-shadow: 0 8px 24px -8px rgb(13 148 136 / 0.12);
+}
+
+.partners-root .pf-card {
+  background-color: var(--pf-bg-card);
+  border: 1px solid var(--pf-border);
+}
+
+.partners-root .pf-hero-glow {
+  background:
+    radial-gradient(ellipse 70% 50% at 80% 10%, rgb(34 211 166 / 0.12), transparent 55%),
+    radial-gradient(ellipse 40% 35% at 5% 90%, rgb(13 148 136 / 0.15), transparent 50%),
+    var(--pf-bg);
+}
+
+.partners-root .pf-btn-primary {
+  background-color: var(--pf-primary);
+  color: var(--pf-cta-text);
+}
+
+.partners-root .pf-btn-primary:hover {
+  background-color: var(--pf-primary-hover);
+}
+
+.partners-root .pf-text-gradient {
+  background: linear-gradient(135deg, var(--pf-text) 0%, var(--pf-primary) 60%, var(--pf-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.partners-root .pf-section {
+  padding-top: 2.75rem;
+  padding-bottom: 2.75rem;
+}
+
+@media (min-width: 768px) {
+  .partners-root .pf-section {
+    padding-top: 3.5rem;
+    padding-bottom: 3.5rem;
+  }
+}
+
+.partners-root .pf-form-card {
+  background: linear-gradient(160deg, rgb(16 43 46 / 0.95) 0%, rgb(7 26 31 / 0.98) 100%);
+  border: 1px solid rgb(34 211 166 / 0.22);
+  box-shadow:
+    0 0 0 1px rgb(26 61 66 / 0.5),
+    0 24px 48px -12px rgb(0 0 0 / 0.45),
+    0 0 80px -20px rgb(34 211 166 / 0.15);
+}
+
+.partners-root .pf-grid-bg {
+  background-image:
+    linear-gradient(rgb(34 211 166 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(34 211 166 / 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.partners-root .pf-stat-pill {
+  background: rgb(16 43 46 / 0.8);
+  border: 1px solid var(--pf-border);
+}
+
+.partners-root .pf-bento-card {
+  background: var(--pf-bg-card);
+  border: 1px solid var(--pf-border);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.partners-root .pf-bento-card:hover {
+  border-color: rgb(34 211 166 / 0.35);
+  transform: translateY(-2px);
+}
+
+.partners-root .pf-light-card {
+  background: var(--pf-bg-card);
+  border: 1px solid var(--pf-border);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.partners-root .pf-light-card:hover {
+  border-color: rgb(34 211 166 / 0.3);
+  transform: translateY(-2px);
+}
+
+.partners-root .pf-step-card {
+  background: var(--pf-bg-card);
+  border: 1px solid var(--pf-border);
+}
+
+.partners-root .pf-portal-banner {
+  background: linear-gradient(135deg, rgb(13 148 136 / 0.12) 0%, rgb(24 201 100 / 0.06) 100%);
+  border: 1px solid rgb(34 211 166 / 0.2);
+}
+
+.partners-root .pf-icon-box {
+  background: rgb(34 211 166 / 0.12);
+  color: var(--pf-primary);
+}
+
+.partners-root .pf-badge {
+  background: rgb(34 211 166 / 0.12);
+  color: var(--pf-primary);
+}
+
+.partners-root .pf-ncr-banner {
+  border-top: 1px solid var(--pf-border);
+  border-bottom: 1px solid var(--pf-border);
+  background: var(--pf-bg-card);
+}
+
+.partners-root .pf-link {
+  color: var(--pf-primary);
+}
+
+.partners-root .pf-link:hover {
+  text-decoration: underline;
+}
+
+/* Partners marketing marquee */
+.partners-marketing-marquee {
+  overflow: hidden;
+}
+
+.partners-marquee-track {
+  animation: partners-marquee 48s linear infinite;
+}
+
+.partners-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes partners-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Premium illustration glow on partner storytelling sections */
+.partners-root .illu-glow-frame {
+  position: relative;
+}
+
+.partners-root .illu-glow-frame::after {
+  content: '';
+  position: absolute;
+  inset: -1rem;
+  z-index: -1;
+  border-radius: 1.5rem;
+  background: radial-gradient(ellipse at center, rgb(34 211 166 / 0.15), transparent 70%);
+  pointer-events: none;
+}
