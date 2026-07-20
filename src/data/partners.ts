@@ -1,19 +1,19 @@
-export const PARTNER_CTA = 'Join Now'
+export const PARTNER_CTA = 'Become a Kuber Partner'
 
 export const PARTNERS_SEO = {
-  title: 'Build Your Financial Business | KuberFinserve Partner Program — Powered by KuberOne',
+  title: 'Become a Kuber Partner | Build Your Own Financial Services Business',
   description:
-    "Join India's AI-powered financial distribution platform. Build your own financial services business with technology, products, training & operational support. Powered by KuberOne.",
+    'Stop building someone else\'s dream. Become an Independent Financial Partner with KuberFinserve — access banks & NBFCs, KuberOne technology, training & higher earning potential. Subject to agreement & eligibility.',
   keywords:
-    'Kuberfinserve partner, financial distribution platform India, build financial business, KuberOne, loan advisor partner, insurance advisor partner, work from home financial business',
+    'become kuber partner, financial services business, loan partner India, DSA alternative, KuberOne, independent financial partner, partner registration',
   path: '/become-partner',
 } as const
 
 export const PARTNER_LOGIN_SEO = {
-  title: 'Partner Login | KuberOne — KuberFinserve',
+  title: 'KuberOne Partner Login | DSA & Partner Access',
   description:
     'Sign in to KuberOne partner app. Access your partner dashboard, leads, pipeline and payouts on mobile.',
-  keywords: 'KuberOne login, KuberFinserve partner login, partner app, financial distribution CRM',
+  keywords: 'KuberOne login, KuberFinserve partner login, partner app, DSA login, financial distribution CRM',
   path: '/partner-login',
 } as const
 
@@ -236,44 +236,36 @@ export const PARTNER_TESTIMONIALS = [
 
 export const PARTNERS_FAQ = [
   {
-    q: 'Who can join KuberFinserve as a partner?',
-    a: 'Financial professionals, loan advisors, insurance advisors, property consultants, CA firms, freelancers, women entrepreneurs, retired bankers, fresh graduates, and anyone who wants to build their own financial business. Prior experience is preferred but not mandatory for motivated applicants.',
+    q: 'Who can join?',
+    a: 'Loan advisors, insurance advisors, property consultants, CAs, freelancers, business owners, retired bankers, fresh graduates, and anyone serious about building an independent financial services business.',
   },
   {
-    q: 'Is this a DSA or agent program?',
-    a: 'No. KuberFinserve is not another DSA program. We are India\'s AI-powered financial distribution platform where you build your own financial business — with technology, products, training, and operational support powered by KuberOne.',
+    q: 'Do I need experience?',
+    a: 'Prior experience helps but is not mandatory. Motivated partners get product training, certification, and CRM onboarding through our Training Academy.',
   },
   {
-    q: 'What is KuberOne?',
-    a: 'KuberOne is India\'s Financial Distribution Operating System — our technology platform that powers partner CRM, lead management, AI assistant, document vault, commission engine, training academy, and more. Never call it an admin panel.',
+    q: 'Is investment required?',
+    a: 'Standard onboarding needs documentation and a partner agreement. Any fee structure, if applicable, is shared transparently before you join — no hidden surprises.',
   },
   {
-    q: 'Do I need to come to an office every day?',
-    a: 'No. Build your financial business from anywhere. You generate leads and serve customers from wherever you work best. Optional in-person onboarding or training may be available.',
+    q: 'How do commissions work?',
+    a: 'You earn revenue share on successfully disbursed cases as per your partner agreement. Track case status and payouts in the KuberOne Commission Wallet in near real time.',
   },
   {
-    q: 'What products can I offer?',
-    a: 'Home loans, loan against property, business loans, personal loans, working capital, credit cards, insurance, balance transfer, and top-up loans — depending on your profile and agreement.',
+    q: 'Is training available?',
+    a: 'Yes. Structured product training, certification, marketing creatives, and ongoing support are part of the partner program.',
   },
   {
-    q: 'How does the partner hierarchy work?',
-    a: 'Partners grow as business owners — from Registered Partner through Certified, Business, Senior Business, Executive, Principal, City, Regional, State, National Partner, Executive Council, to Chairman\'s Circle. Each level unlocks higher recognition, additional opportunities, leadership responsibilities, training, and marketing support.',
+    q: 'How many banks & NBFCs?',
+    a: 'Partners get access to a wide network of leading banks and NBFCs (50+ lending partners). Exact product availability depends on profile, location, and agreement.',
   },
   {
-    q: 'What does KuberFinserve handle vs what do I do?',
-    a: 'You build your business — lead generation, customer relationships, and growth. We provide KuberOne technology, product access, eligibility checks, documentation, lender matching, operations support, and transparent payouts.',
+    q: 'What support is available?',
+    a: 'Dedicated partner support, operations assistance, CRM & WhatsApp automation, AI tools, and marketing creatives — so you focus on customers while technology handles the heavy lifting.',
   },
   {
-    q: 'How fast are payouts processed?',
-    a: 'Payouts are processed after successful disbursal as per the agreed timeline. Track case status and commission in real time through KuberOne.',
-  },
-  {
-    q: 'Is there any joining fee?',
-    a: 'Standard onboarding requires documentation and agreement signing. Any fee structure, if applicable, is communicated transparently before you join.',
-  },
-  {
-    q: 'How do I apply?',
-    a: 'Fill the form on this page, click Join Now, or WhatsApp us with your name, city, and experience. Our team responds within 48 business hours.',
+    q: 'Can I work part time?',
+    a: 'Yes. Many partners start part-time with side income, then scale to full-time as case volume grows. Work on your own terms.',
   },
 ] as const
 

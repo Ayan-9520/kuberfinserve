@@ -17,7 +17,6 @@ import { useToast } from '@/components/ui/Toast'
 import type { LeadApplicationData } from '@/components/LeadApplicationForm'
 import {
   EMPLOYMENT_TYPES_LEAD,
-  INCOME_RANGES,
   TENURE_OPTIONS,
   LOAN_TYPE_OPTIONS,
 } from '@/data/forms'
@@ -141,7 +140,8 @@ export function ApplyLoanWizard() {
     }
     if (s === 2) {
       if (!data.employmentType) e.employmentType = 'Required'
-      if (!data.monthlyIncome) e.monthlyIncome = 'Required'
+      if (!data.monthlyIncome || Number(data.monthlyIncome) < 1)
+        e.monthlyIncome = 'Enter monthly income'
       if (!data.companyName.trim()) e.companyName = 'Required'
       if (!data.workExperience) e.workExperience = 'Required'
     }
@@ -377,19 +377,16 @@ export function ApplyLoanWizard() {
                     ))}
                   </select>
                 </Field>
-                <Field label="Monthly Income *" error={errors.monthlyIncome}>
-                  <select
+                <Field label="Monthly Income (₹) *" error={errors.monthlyIncome}>
+                  <input
+                    type="number"
                     value={data.monthlyIncome}
                     onChange={(e) => update({ monthlyIncome: e.target.value })}
                     className={cn(inputClass, errors.monthlyIncome && 'border-red-400')}
-                  >
-                    <option value="">Select range</option>
-                    {INCOME_RANGES.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="e.g. 75000"
+                    min={1}
+                    inputMode="numeric"
+                  />
                 </Field>
                 <Field label="Company Name *" error={errors.companyName}>
                   <input

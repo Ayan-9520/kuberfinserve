@@ -43,7 +43,7 @@ export function Contact() {
               className="w-full shadow-lg ring-1 ring-brand-100/80"
             />
 
-            <div className="overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-md lg:sticky lg:top-28">
+            <div className="kf-sticky-form overflow-visible rounded-2xl border border-brand-100 bg-white shadow-md">
               <OfficeMap heightClass="h-64 md:h-72 lg:h-[520px]" />
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 bg-white px-3 py-2.5">
                 <p className="flex items-start gap-1.5 text-xs text-gray-600">

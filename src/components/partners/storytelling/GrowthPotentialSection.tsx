@@ -41,7 +41,7 @@ export function GrowthPotentialSection() {
                   )}
                 </div>
                 <div className="pb-1">
-                  <p className="font-heading text-base font-bold text-[#0f172a]">{step.label}</p>
+                  <p className="font-heading text-base font-bold text-navy-900">{step.label}</p>
                   <p className="text-sm text-[#64748b]">{step.description}</p>
                 </div>
               </div>

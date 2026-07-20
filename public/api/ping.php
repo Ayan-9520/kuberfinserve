@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 require __DIR__ . '/db.php';
+require __DIR__ . '/mailer.php';
 
 api_handle_preflight();
 
@@ -29,6 +30,13 @@ try {
         'database' => $config['db_name'] ?? '',
         'leads_count' => $count,
         'leads_email' => $config['leads_email'] ?? '',
+        'site_email' => $config['site_email'] ?? '',
+        'smtp_configured' => api_smtp_configured($config),
+        'smtp_host' => $config['smtp_host'] ?? '',
+        'smtp_user' => $config['smtp_user'] ?? '',
+        'kuberone_bridge_enabled' => !empty($config['kuberone_bridge_enabled']),
+        'kuberone_api_base' => $config['kuberone_api_base'] ?? '',
+        'kuberone_api_key_set' => trim((string) ($config['kuberone_api_key'] ?? '')) !== '',
     ]);
 } catch (Throwable $e) {
     api_json_response([

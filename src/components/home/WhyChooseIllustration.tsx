@@ -33,8 +33,8 @@ export function WhyChooseIllustration({ className }: WhyChooseIllustrationProps)
       <ellipse cx="140" cy="410" rx="170" ry="85" fill="#99f6e4" opacity="0.35" />
 
       {/* Ground shadow */}
-      <ellipse cx="250" cy="392" rx="160" ry="34" fill="#0f172a" opacity="0.06" />
-      <ellipse cx="440" cy="402" rx="120" ry="26" fill="#0f172a" opacity="0.05" />
+      <ellipse cx="250" cy="392" rx="160" ry="34" fill="#0a342c" opacity="0.06" />
+      <ellipse cx="440" cy="402" rx="120" ry="26" fill="#0a342c" opacity="0.05" />
 
       {/* Question mark */}
       <g filter="url(#softShadow)">
@@ -51,10 +51,10 @@ export function WhyChooseIllustration({ className }: WhyChooseIllustrationProps)
         <path d="M178 270c4-22 23-38 44-38s40 16 44 38v10h-88v-10z" fill="#0f766e" opacity="0.95" />
         <path d="M160 280h120v70c0 18-27 34-60 34s-60-16-60-34v-70z" fill="#22c55e" opacity="0.95" />
         <rect x="150" y="306" width="140" height="90" rx="16" fill="#064e3b" opacity="0.95" />
-        <path d="M214 258l-20 22" stroke="#0f172a" strokeWidth="10" strokeLinecap="round" opacity="0.12" />
+        <path d="M214 258l-20 22" stroke="#0a342c" strokeWidth="10" strokeLinecap="round" opacity="0.12" />
         <path d="M212 258l-18 22" stroke="#f6d7bf" strokeWidth="8" strokeLinecap="round" />
         <path d="M185 296c16 0 30 10 34 24" stroke="#f6d7bf" strokeWidth="10" strokeLinecap="round" />
-        <path d="M185 296c16 0 30 10 34 24" stroke="#0f172a" strokeWidth="12" strokeLinecap="round" opacity="0.10" />
+        <path d="M185 296c16 0 30 10 34 24" stroke="#0a342c" strokeWidth="12" strokeLinecap="round" opacity="0.10" />
       </g>
 
       {/* Small idea bubbles */}

@@ -1,4 +1,7 @@
 import { SITE } from '@/data/site'
+import type { ProductFaq } from '@/data/productFaqs'
+
+const BASE = 'https://kuberfinserve.com'
 
 export const organizationSchema = {
   '@context': 'https://schema.org',
@@ -36,5 +39,63 @@ export const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: SITE.name,
-  url: 'https://kuberfinserve.com',
+  url: BASE,
 } as const
+
+export function buildBreadcrumbSchema(items: { name: string; path: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: `${BASE}${item.path}`,
+    })),
+  }
+}
+
+export function buildFaqSchema(faqs: readonly ProductFaq[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: { '@type': 'Answer', text: faq.a },
+    })),
+  }
+}
+
+export function buildLoanProductSchema(input: {
+  name: string
+  description: string
+  path: string
+  rateFrom: string
+  image?: string
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FinancialProduct',
+    name: input.name,
+    description: input.description,
+    url: `${BASE}${input.path}`,
+    provider: {
+      '@type': 'FinancialService',
+      name: SITE.name,
+      url: BASE,
+    },
+    areaServed: { '@type': 'Country', name: 'India' },
+    ...(input.image ? { image: input.image.startsWith('http') ? input.image : `${BASE}${input.image}` } : {}),
+    offers: {
+      '@type': 'Offer',
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: input.rateFrom.replace(/[^\d.]/g, '') || '0',
+        unitText: 'percent per annum',
+      },
+      eligibleRegion: { '@type': 'Country', name: 'IN' },
+      availability: 'https://schema.org/InStock',
+    },
+  }
+}

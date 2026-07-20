@@ -9,17 +9,20 @@ return [
     'db_user' => 'u123456789_kuberuser',
     'db_pass' => 'YOUR_DATABASE_PASSWORD',
 
-  // Admin panel: /api/admin/
+    // Admin panel: /api/admin/
     'admin_username' => 'admin',
     'admin_password' => 'Change-This-Strong-Password-123!',
 
-  // Emails — SMTP required for customer Gmail delivery (PHP mail() often fails for external inboxes)
+    // Emails — SMTP required for Gmail/outside inbox delivery
+    // Admin notification inbox (can be comma-separated for multiple admins)
     'leads_email' => 'loanleads@kuberfinserve.com',
+    // Website / company inbox (also gets lead + partner alerts)
+    'site_email' => 'info@kuberfinserve.com',
     'from_email' => 'loanleads@kuberfinserve.com',
     'site_name' => 'KuberFinserve',
     'site_phone' => '+91 7982953129',
 
-    // Hostinger mailbox SMTP (same as email account password)
+    // Hostinger mailbox SMTP (password = that email account's password in hPanel)
     'smtp_host' => 'smtp.hostinger.com',
     'smtp_port' => 587,
     'smtp_secure' => 'tls',
@@ -41,16 +44,15 @@ return [
     'whatsapp_api_url' => '',
     'whatsapp_api_key' => '',
 
-    // KuberOne Admin bridge (dual-write). Website UI stays the same.
-    // Local Docker API: http://host.docker.internal:4000 OR http://127.0.0.1:4000
-    // Production API: https://api.your-kuberone-domain.com
-    'kuberone_bridge_enabled' => false,
-    'kuberone_api_base' => 'http://127.0.0.1:4000',
-    'kuberone_api_key' => '', // must match WEBSITE_INTAKE_API_KEY on KuberOne when set
-    // When true, Partner Login OTP (mobile identifier) uses KuberOne auth (same as DSA app)
-    'kuberone_partner_auth_enabled' => false,
+    // KuberOne Admin bridge (dual-write to CRM).
+    // IMPORTANT:
+    // - Live site (kuberfinserve.com) → PUBLIC HTTPS API only (Hostinger cannot reach your PC localhost)
+    // - Local npm run dev → http://127.0.0.1:4000 (Docker KuberOne backend)
+    // Examples: http://127.0.0.1:4000  |  https://api.kuberone.online  |  https://your-tunnel.ngrok.app
+    'kuberone_bridge_enabled' => true,
+    'kuberone_api_base' => 'https://YOUR-KUBERONE-API-DOMAIN',
+    // Must match WEBSITE_INTAKE_API_KEY on KuberOne backend (.env / .env.docker) — min 16 chars
+    'kuberone_api_key' => 'CHANGE-TO-MATCH-WEBSITE_INTAKE_API_KEY',
+    // When true, Partner Login OTP uses KuberOne auth (same as DSA app)
+    'kuberone_partner_auth_enabled' => true,
 ];
-
-
-'kuberone_bridge_enabled' => true,
-'kuberone_api_base' => 'https://revenues-plymouth-dialogue-tool.trycloudflare.com',

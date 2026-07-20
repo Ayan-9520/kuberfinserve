@@ -22,27 +22,26 @@ function StatValue({ stat }: { stat: (typeof PREMIUM_STATS)[number] }) {
 
   if (typeof stat.value === 'string') {
     return (
-      <span ref={ref} className="font-heading text-3xl font-bold text-white md:text-4xl">
+      <span ref={ref} className="font-heading text-3xl font-bold text-navy-900 md:text-4xl">
         {stat.value}
-        <span className="text-brand-400">{stat.suffix}</span>
+        <span className="text-brand-600">{stat.suffix}</span>
       </span>
     )
   }
 
-  const formatted =
-    stat.numeric >= 1000 ? `${Math.floor(display / 1000)}k` : display
+  const formatted = stat.numeric >= 1000 ? `${Math.floor(display / 1000)}k` : display
 
   return (
-    <span ref={ref} className="font-heading text-3xl font-bold text-white md:text-4xl">
+    <span ref={ref} className="font-heading text-3xl font-bold text-navy-900 md:text-4xl">
       {stat.numeric >= 10000 ? `${Math.floor(display / 1000)}k` : formatted}
-      <span className="text-brand-400">{stat.suffix}</span>
+      <span className="text-brand-600">{stat.suffix}</span>
     </span>
   )
 }
 
 export function TrustStrip() {
   return (
-    <section className="border-y border-brand-800/30 bg-brand-900 py-12 md:py-14">
+    <section className="border-y border-slate-200/80 bg-white py-12 md:py-14">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {PREMIUM_STATS.map((stat, i) => (
@@ -55,7 +54,7 @@ export function TrustStrip() {
               className="text-center"
             >
               <StatValue stat={stat} />
-              <p className="mt-2 text-sm text-brand-100/80">{stat.label}</p>
+              <p className="mt-2 text-sm text-slate-600">{stat.label}</p>
             </motion.div>
           ))}
         </div>

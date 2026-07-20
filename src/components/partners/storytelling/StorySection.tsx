@@ -53,7 +53,7 @@ export function StorySection({
             <h2
               className={cn(
                 'mt-3 font-heading text-2xl font-extrabold leading-tight md:text-3xl lg:text-4xl',
-                isDark ? 'text-[var(--pf-text)]' : 'text-[#0f172a]',
+                isDark ? 'text-[var(--pf-text)]' : 'text-navy-900',
               )}
             >
               {title}

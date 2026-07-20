@@ -44,6 +44,9 @@ try {
     if (!empty($result['emails'])) {
         $response['emails'] = $result['emails'];
     }
+    if (array_key_exists('kuberone', $result)) {
+        $response['kuberone'] = $result['kuberone'];
+    }
 
     api_json_response($response);
 } catch (Throwable $e) {

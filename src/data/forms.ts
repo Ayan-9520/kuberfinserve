@@ -43,6 +43,7 @@ export const SLUG_TO_LOAN_TYPE: Record<string, string> = {
   'home-loan': 'Home Loan',
   'personal-loan': 'Personal Loan',
   'business-loan': 'Business Loan',
+  'working-capital': 'Working Capital',
   'loan-against-property': 'Loan Against Property',
   'education-loan': 'Education Loan',
   'machinery-loan': 'Machinery Loan',
@@ -55,24 +56,34 @@ export const LOAN_TYPE_OPTIONS = [
   'Auto Loan (Used Car)',
   'Personal Loan',
   'Business Loan',
+  'Working Capital',
   'Education Loan',
   'Machinery Loan',
-  'Insurance',
   'Credit Card',
+  'Insurance',
+  'CIBIL Assistance',
 ] as const
+
+/** Products that do not need loan amount / tenure */
+export const NON_LOAN_PRODUCTS = ['Credit Card', 'Insurance', 'CIBIL Assistance'] as const
+
+export function isNonLoanProduct(product: string): boolean {
+  return (NON_LOAN_PRODUCTS as readonly string[]).includes(product)
+}
 
 export const LOAN_PAGE_META: Record<
   string,
   { minAmount: number; maxAmount: string; maxTenure: string; processingTime: string }
 > = {
-  'new-car-loan': { minAmount: 100000, maxAmount: '₹50 Lakh', maxTenure: '7 Years', processingTime: '24–48 hrs' },
-  'used-car-loan': { minAmount: 50000, maxAmount: '₹25 Lakh', maxTenure: '5 Years', processingTime: '24–48 hrs' },
-  'home-loan': { minAmount: 500000, maxAmount: '₹5 Cr+', maxTenure: '30 Years', processingTime: '3–7 days' },
-  'personal-loan': { minAmount: 50000, maxAmount: '₹40 Lakh', maxTenure: '5 Years', processingTime: 'Same day' },
-  'business-loan': { minAmount: 100000, maxAmount: '₹2 Cr+', maxTenure: '10 Years', processingTime: '2–5 days' },
-  'loan-against-property': { minAmount: 500000, maxAmount: '₹10 Cr+', maxTenure: '15 Years', processingTime: '5–10 days' },
-  'education-loan': { minAmount: 100000, maxAmount: '₹1.5 Cr', maxTenure: '15 Years', processingTime: '3–7 days' },
-  'machinery-loan': { minAmount: 100000, maxAmount: '₹5 Cr+', maxTenure: '10 Years', processingTime: '2–5 days' },
+  'home-loan': { minAmount: 500000, maxAmount: '₹25 Crore*', maxTenure: '30 Years*', processingTime: '3–7 Working Days*' },
+  'loan-against-property': { minAmount: 500000, maxAmount: '₹25 Crore*', maxTenure: '20 Years*', processingTime: '5–10 Working Days*' },
+  'business-loan': { minAmount: 100000, maxAmount: '₹10 Crore*', maxTenure: '10 Years*', processingTime: '2–5 Working Days*' },
+  'working-capital': { minAmount: 100000, maxAmount: '₹20 Crore*', maxTenure: 'Renewable Limit*', processingTime: '2–5 Working Days*' },
+  'personal-loan': { minAmount: 50000, maxAmount: '₹50 Lakh*', maxTenure: '7 Years*', processingTime: '24–48 Hours*' },
+  'new-car-loan': { minAmount: 100000, maxAmount: '90% On Road*', maxTenure: '8 Years*', processingTime: '24–48 Hours*' },
+  'used-car-loan': { minAmount: 50000, maxAmount: '₹5 Crore*', maxTenure: '7 Years*', processingTime: '24–48 Hours*' },
+  'education-loan': { minAmount: 100000, maxAmount: '₹3 Crore*', maxTenure: '15 Years*', processingTime: '3–7 Working Days*' },
+  'machinery-loan': { minAmount: 100000, maxAmount: '₹15 Crore*', maxTenure: '10 Years*', processingTime: '2–5 Working Days*' },
 }
 
 export const APPLICATION_STEPS = [

@@ -15,6 +15,8 @@ export const KUBERONE_FEATURES = [
   { title: 'Reports & Analytics', description: 'Deep insights into performance, trends & opportunities.', icon: 'bar-chart' },
   { title: 'Rewards', description: 'Gamified recognition, badges & achievement milestones.', icon: 'award' },
   { title: 'Mobile App', description: 'Run your financial business from anywhere, on any device.', icon: 'smartphone' },
+  { title: 'Digital Visiting Card', description: 'Share your partner identity instantly with customers.', icon: 'id' },
+  { title: 'Case Tracking', description: 'Live status from login to disbursement for every case.', icon: 'clipboard' },
 ] as const
 
 export const AI_MODULES = [

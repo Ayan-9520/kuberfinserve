@@ -74,7 +74,7 @@ export function HeroPartnerIllustration({ className }: HeroPartnerIllustrationPr
         <g transform="translate(400, 280)">
           <motion.g animate={{ y: [0, -4, 0] }} transition={{ duration: 4, repeat: Infinity }}>
             <ellipse cx="0" cy="55" rx="35" ry="8" fill="#000" opacity="0.3" />
-            <PersonSilhouette x={0} y={0} scale={1.4} color="#0f172a" accent={ILLU.primary} />
+            <PersonSilhouette x={0} y={0} scale={1.4} color="#0a342c" accent={ILLU.primary} />
             {/* Tablet - KuberOne */}
             <rect x="-28" y="-5" width="56" height="40" rx="6" fill={ILLU.card} stroke="url(#illu-grad-primary)" strokeWidth="2" />
             <text x="0" y="12" textAnchor="middle" fill={ILLU.primary} fontSize="8" fontWeight="700" fontFamily="system-ui">

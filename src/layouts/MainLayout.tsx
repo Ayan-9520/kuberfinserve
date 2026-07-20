@@ -7,7 +7,9 @@ import { ScrollProgress } from '@/components/ScrollProgress'
 import { FloatingButtons } from '@/components/FloatingButtons'
 import { FloatingApplyBar } from '@/components/conversion/FloatingApplyBar'
 import { LeadCaptureModal } from '@/components/conversion/LeadCaptureModal'
+import { VisitorInterestModal } from '@/components/conversion/VisitorInterestModal'
 import { Chatbot } from '@/components/Chatbot'
+import { ScrollToTop } from '@/components/ScrollToTop'
 import { pageTransition } from '@/animations/variants'
 import { JsonLd } from '@/components/JsonLd'
 import { organizationSchema, websiteSchema } from '@/data/jsonLdSchemas'
@@ -26,6 +28,7 @@ export function MainLayout() {
 
   return (
     <div className={cn('flex min-h-screen flex-col', isPartners ? 'bg-[#F8FAFC]' : 'bg-white')}>
+      <ScrollToTop />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white"
@@ -53,6 +56,7 @@ export function MainLayout() {
       <Chatbot />
       <FloatingButtons />
       {!hideMobileBar && <FloatingApplyBar />}
+      <VisitorInterestModal />
       {showConversionModals && <LeadCaptureModal />}
     </div>
   )

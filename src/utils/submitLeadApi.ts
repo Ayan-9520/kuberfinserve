@@ -57,6 +57,12 @@ export async function submitLeadToServer(
       id?: number
       saved?: string
       emails?: { admin?: boolean; user?: boolean }
+      kuberone?: {
+        synced?: boolean
+        skipped?: boolean
+        lead_number?: string | null
+        error?: string | null
+      }
     } = {}
     try {
       json = JSON.parse(cleaned) as typeof json
@@ -76,6 +82,11 @@ export async function submitLeadToServer(
 
     const emails = json.emails
     const emailsSent = Boolean(emails?.admin && emails?.user)
+    const ko = json.kuberone
+    const crmWarning =
+      ko && ko.synced === false && !ko.skipped
+        ? `Saved on website. Admin CRM sync failed${ko.error ? `: ${ko.error}` : ''} — check api/config.php kuberone_api_base + API key.`
+        : undefined
 
     return {
       ok: true,
@@ -84,7 +95,7 @@ export async function submitLeadToServer(
       message: json.message,
       emailsSent,
       emails,
-      warning: json.warning,
+      warning: json.warning || crmWarning,
     }
   } catch {
     return {

@@ -6,7 +6,6 @@ require_once __DIR__ . '/mailer.php';
 
 function api_partner_notify_admin_new(array $partner, array $config): bool
 {
-    $leadsEmail = $config['leads_email'] ?? 'loanleads@kuberfinserve.com';
     $site = $config['site_name'] ?? 'KuberFinserve';
     $subject = "New Partner Application — {$partner['full_name']} (#{$partner['id']})";
     $body = implode("\n", [
@@ -29,7 +28,9 @@ function api_partner_notify_admin_new(array $partner, array $config): bool
         'Review in admin: /api/admin/partners.php',
     ]);
 
-    return api_send_mail($leadsEmail, $subject, $body, $config, $partner['email'] ?? null);
+    $result = api_send_mail_to_admins($subject, $body, $config, $partner['email'] ?? null);
+
+    return (bool) ($result['sent'] ?? false);
 }
 
 function api_partner_notify_registration_received(array $partner, array $config): bool
@@ -40,15 +41,22 @@ function api_partner_notify_registration_received(array $partner, array $config)
     }
 
     $site = $config['site_name'] ?? 'KuberFinserve';
+    $phone = $config['site_phone'] ?? '';
+    $name = trim((string) ($partner['full_name'] ?? '')) ?: 'Partner';
     $subject = 'Partner application received — ' . $site;
-    $body = "Dear {$partner['full_name']},\n\n";
-    $body .= "Thank you for registering as a KuberFinserve partner.\n\n";
-    $body .= "Your application has been submitted successfully and is currently under review.\n";
-    $body .= "Our verification team will contact you soon.\n\n";
-    $body .= "Application reference: #{$partner['id']}\n\n";
+    $body = "Dear {$name},\n\n";
+    $body .= "Thank you for applying to become a {$site} partner.\n\n";
+    $body .= "We have received your application (Reference #{$partner['id']}).\n\n";
+    $body .= "Our verification team will review your details and notify you by email once your application is approved. After approval, you can sign in using OTP on Partner Login or the KuberOne Partner App.\n\n";
+    $body .= "Login is available only after approval.\n\n";
+    if ($phone !== '') {
+        $body .= "Need help? Call {$phone}\n\n";
+    }
     $body .= "Regards,\n{$site} Team\n";
 
-    return api_send_mail($email, $subject, $body, $config, $config['leads_email'] ?? null);
+    $replyTo = api_notification_emails($config)[0] ?? ($config['leads_email'] ?? null);
+
+    return api_send_mail($email, $subject, $body, $config, is_string($replyTo) ? $replyTo : null);
 }
 
 function api_partner_notify_approved(

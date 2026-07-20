@@ -30,12 +30,13 @@ $userOnly = !empty($data['userConfirmationOnly']);
 $results = ['admin' => false, 'user' => false];
 
 if (!$userOnly) {
-    $leadsEmail = $config['leads_email'] ?? 'loanleads@kuberfinserve.com';
     $subject = api_str($data['subject'] ?? null, 200) ?? ('New lead — ' . ($config['site_name'] ?? 'KuberFinserve'));
     $message = api_str($data['message'] ?? null, 20000) ?? 'New lead submitted.';
     $replyTo = api_str($data['replyTo'] ?? $data['reply_to'] ?? null, 150);
 
-    $results['admin'] = api_send_mail($leadsEmail, $subject, $message, $config, $replyTo);
+    $adminMail = api_send_mail_to_admins($subject, $message, $config, $replyTo);
+    $results['admin'] = (bool) ($adminMail['sent'] ?? false);
+    $results['admin_recipients'] = $adminMail['recipients'] ?? [];
 }
 
 if ($userEmail && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
@@ -53,9 +54,10 @@ if (!$results['admin'] && !$results['user']) {
     api_json_response([
         'ok' => false,
         'error' => api_smtp_configured($config)
-            ? 'Could not send email via SMTP.'
-            : 'SMTP not configured in api/config.php — customer emails need SMTP.',
+            ? 'Could not send email via SMTP. Check api/config.php: smtp_host=smtp.hostinger.com, smtp_user=mailbox email, smtp_pass=that mailbox password (hPanel → Emails).'
+            : 'SMTP not configured in api/config.php — add smtp_host, smtp_user, smtp_pass (Hostinger mailbox).',
         'emails' => $results,
+        'smtp_configured' => api_smtp_configured($config),
     ], 500);
 }
 

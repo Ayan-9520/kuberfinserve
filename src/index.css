@@ -13,11 +13,12 @@
   --color-brand-100: #dcfce7;
   --color-brand-50: #f0fdf9;
 
-  --color-navy-950: #020617;
-  --color-navy-900: #0f172a;
-  --color-navy-800: #1e293b;
-  --color-navy-700: #334155;
-  --color-navy-600: #475569;
+  /* Primary text scale — dark green (not black/slate) */
+  --color-navy-950: #032820;
+  --color-navy-900: #0a342c;
+  --color-navy-800: #0f4036;
+  --color-navy-700: #1a5246;
+  --color-navy-600: #2a6759;
 
   --color-silver-50: #f8fafc;
   --color-silver-100: #f1f5f9;
@@ -38,6 +39,27 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Soften default slate body text toward dark green */
+  .text-slate-900,
+  .text-gray-900 {
+    color: var(--color-navy-900);
+  }
+
+  .text-slate-800,
+  .text-gray-800 {
+    color: var(--color-navy-800);
+  }
+
+  .text-slate-700,
+  .text-gray-700 {
+    color: var(--color-navy-700);
+  }
+
+  .text-slate-600,
+  .text-gray-600 {
+    color: var(--color-navy-600);
+  }
+
   h1,
   h2,
   h3,
@@ -45,6 +67,29 @@
   h5,
   h6 {
     font-family: var(--font-heading);
+  }
+
+  /* Manual amount fields — no spinner arrows */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
+/* Sticky apply forms: stick on desktop without nested scrollbar */
+@media (min-width: 1024px) {
+  .kf-sticky-form {
+    position: sticky;
+    top: 6rem;
+    align-self: start;
+    max-height: none;
+    /* Keep overflow:hidden from the card so top radius clips cleanly */
   }
 }
 
@@ -76,11 +121,11 @@
     background: rgb(255 255 255 / 0.78);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgb(15 23 42 / 0.10);
+    border: 1px solid rgb(10 52 44 / 0.12);
   }
 
   .glass-dark {
-    background: rgb(15 23 42 / 0.72);
+    background: rgb(10 52 44 / 0.78);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgb(255 255 255 / 0.08);
@@ -90,13 +135,13 @@
     background:
       radial-gradient(ellipse 80% 60% at 70% 20%, rgb(0 195 137 / 0.18), transparent 55%),
       radial-gradient(ellipse 50% 40% at 10% 80%, rgb(11 93 75 / 0.35), transparent 50%),
-      linear-gradient(145deg, #0f172a 0%, #0b5d4b 45%, #0f172a 100%);
+      linear-gradient(145deg, #032820 0%, #0b5d4b 45%, #032820 100%);
   }
 
   .bg-fintech-cta {
     background:
-      radial-gradient(ellipse 60% 80% at 100% 0%, rgb(0 195 137 / 0.2), transparent 50%),
-      linear-gradient(135deg, #0f172a 0%, #0b5d4b 50%, #053d32 100%);
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgb(0 195 137 / 0.2), transparent 55%),
+      linear-gradient(135deg, #032820 0%, #0b5d4b 50%, #053d32 100%);
   }
 
   .text-gradient-fintech {
@@ -214,7 +259,7 @@
 
 .partners-root .pf-section-white {
   background-color: #f8fafc;
-  color: #0f172a;
+  color: #0a342c;
 }
 
 .partners-root .pf-white-card {
@@ -246,7 +291,7 @@
 }
 
 .partners-root .pf-portal-banner-light .pf-portal-title {
-  color: #0f172a;
+  color: #0a342c;
 }
 
 .partners-root .pf-portal-banner-light .pf-portal-text {

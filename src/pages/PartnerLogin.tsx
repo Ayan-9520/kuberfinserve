@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   KeyRound,
+  Lock,
   LogIn,
   Smartphone,
 } from 'lucide-react'
@@ -18,6 +19,7 @@ import { useToast } from '@/components/ui/Toast'
 import { openMobileApp } from '@/utils/partnerApp'
 import { loginPartner } from '@/utils/submitPartnerApi'
 import { getPartnerToken, getPartnerProfile, savePartnerSession } from '@/utils/partnerAuth'
+import { PlatformLogo } from '@/components/PlatformLogo'
 import { cn } from '@/utils/cn'
 
 interface LoginFormData {
@@ -26,9 +28,33 @@ interface LoginFormData {
   otp: string
 }
 
+function validateIdentifier(raw: string): string | null {
+  const identifier = raw.trim()
+  if (!identifier) return 'Mobile, email, or Partner Code is required'
+
+  if (identifier.includes('@')) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)) return 'Enter a valid email address'
+    return null
+  }
+
+  const digits = identifier.replace(/\D/g, '')
+  const looksLikeMobile =
+    digits.length >= 10 && !/^[A-Za-z]{2,}/.test(identifier)
+
+  if (looksLikeMobile) {
+    let normalized = digits
+    if (normalized.length === 12 && normalized.startsWith('91')) normalized = normalized.slice(2)
+    if (normalized.length === 11 && normalized.startsWith('0')) normalized = normalized.slice(1)
+    if (normalized.length !== 10) return 'Enter a valid 10-digit mobile number'
+    if (!/^[6-9]/.test(normalized)) return 'Mobile number must start with 6-9'
+  }
+
+  return null
+}
+
 export function PartnerLogin() {
   const [showPassword, setShowPassword] = useState(false)
-  const [loginMode, setLoginMode] = useState<'password' | 'otp'>('password')
+  const [loginMode, setLoginMode] = useState<'otp' | 'password'>('otp')
   const [otpRequested, setOtpRequested] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
@@ -43,7 +69,7 @@ export function PartnerLogin() {
   } = useForm<LoginFormData>()
 
   const inputClass =
-    'w-full rounded-lg border border-[var(--pf-border)] bg-[var(--pf-bg)]/80 px-3 py-2.5 text-sm text-[var(--pf-text)] placeholder:text-[var(--pf-text-muted)] focus:border-[var(--pf-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--pf-primary)]/25'
+    'w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 shadow-sm transition placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-[3px] focus:ring-brand-500/15'
 
   const redirectToAppWithToken = (token: string, partnerId: string | null) => {
     setRedirecting(true)
@@ -67,6 +93,13 @@ export function PartnerLogin() {
   const onPasswordLogin = async (data: LoginFormData) => {
     setLoginError(null)
     setLoginSuccess(null)
+
+    const idError = validateIdentifier(data.identifier)
+    if (idError) {
+      setLoginError(idError)
+      showError(idError)
+      return
+    }
 
     const result = await loginPartner({
       identifier: data.identifier.trim(),
@@ -101,10 +134,10 @@ export function PartnerLogin() {
 
   const onRequestOtp = async () => {
     const identifier = getValues('identifier')?.trim()
-    if (!identifier) {
-      const message = 'Please enter your Partner ID or email for OTP login.'
-      setLoginError(message)
-      showError(message)
+    const idError = validateIdentifier(identifier || '')
+    if (idError) {
+      setLoginError(idError)
+      showError(idError)
       return
     }
 
@@ -112,7 +145,7 @@ export function PartnerLogin() {
     setLoginSuccess(null)
 
     const result = await loginPartner({
-      identifier,
+      identifier: identifier!,
       mode: 'otp_request',
     })
 
@@ -124,7 +157,11 @@ export function PartnerLogin() {
     }
 
     setOtpRequested(true)
-    const otpMessage = result.message ?? 'OTP sent to your registered mobile number.'
+    const otpMessage =
+      result.message ??
+      (import.meta.env.DEV
+        ? 'OTP sent. Local/dev OTP is 123456.'
+        : 'OTP sent to your registered mobile number.')
     setLoginSuccess(otpMessage)
     showSuccess(otpMessage)
   }
@@ -133,14 +170,14 @@ export function PartnerLogin() {
     const identifier = getValues('identifier')?.trim()
     const otp = getValues('otp')?.trim()
 
-    if (!identifier) {
-      const message = 'Please enter your Partner ID or email.'
-      setLoginError(message)
-      showError(message)
+    const idError = validateIdentifier(identifier || '')
+    if (idError) {
+      setLoginError(idError)
+      showError(idError)
       return
     }
-    if (!otp) {
-      const message = 'Please enter the OTP sent to your mobile.'
+    if (!otp || otp.length !== 6) {
+      const message = 'Please enter the 6-digit OTP sent to your mobile.'
       setLoginError(message)
       showError(message)
       return
@@ -150,7 +187,7 @@ export function PartnerLogin() {
     setLoginSuccess(null)
 
     const result = await loginPartner({
-      identifier,
+      identifier: identifier!,
       otp,
       mode: 'otp',
     })
@@ -171,7 +208,10 @@ export function PartnerLogin() {
       status: result.partner.status,
     })
 
-    const successMessage = 'Login successful. Opening KuberOne app…'
+    const codeHint = result.partner.partner_id
+      ? ` Partner Code: ${result.partner.partner_id}.`
+      : ''
+    const successMessage = `Login successful.${codeHint} Opening KuberOne app…`
     setLoginSuccess(successMessage)
     showSuccess(successMessage)
     redirectToAppWithToken(result.token, result.partner.partner_id)
@@ -185,7 +225,7 @@ export function PartnerLogin() {
   }
 
   return (
-    <div className="partners-root min-h-[calc(100vh-8rem)] overflow-x-hidden">
+    <div className="partner-login-page relative min-h-[calc(100vh-7.5rem)] overflow-x-hidden">
       <SeoHead
         title={PARTNER_LOGIN_SEO.title}
         description={PARTNER_LOGIN_SEO.description}
@@ -203,167 +243,178 @@ export function PartnerLogin() {
         }}
       />
 
-      <section className="pf-hero-glow pf-grid-bg relative flex min-h-[calc(100vh-8rem)] items-center py-10">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-md">
-            <Link
-              to={SITE.becomePartnerUrl}
-              className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium text-[var(--pf-text-muted)] transition-colors hover:text-[var(--pf-primary)]"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Become a Partner
-            </Link>
+      {/* Local free-to-use background (Unsplash License — commercial OK) */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <img
+          src="/images/partner-login-bg.jpg"
+          alt=""
+          className="h-full w-full scale-105 object-cover object-center blur-[2px]"
+          loading="eager"
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-[#0a2e26]/50 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a2e26]/35 via-[#0a2e26]/25 to-[#0a2e26]/60" />
+      </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="pf-form-card rounded-2xl p-6 md:p-8"
-            >
-              <div className="mb-6 text-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--pf-primary)]/25 bg-[var(--pf-primary)]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--pf-primary)]">
-                  {SITE.platformName}
-                </span>
-                <h1 className="mt-3 font-heading text-2xl font-bold text-[var(--pf-text)]">Partner Login</h1>
-                <p className="mt-1.5 text-sm text-[var(--pf-text-secondary)]">
-                  Sign in with your approved partner credentials. Access continues in the {SITE.platformName} app.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleOpenApp}
-                  className="pf-btn-primary mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold"
+      <section className="relative flex min-h-[calc(100vh-7.5rem)] items-center justify-center px-4 py-10 sm:px-6 lg:py-14">
+        <div className="mx-auto w-full max-w-[440px]">
+          <Link
+            to={SITE.becomePartnerUrl}
+            className="mb-4 inline-flex items-center gap-1.5 text-[12px] font-medium text-white/85 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Become a Partner
+          </Link>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-2xl bg-white/95 p-7 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.4)] backdrop-blur-md ring-1 ring-white/50 sm:p-8"
+          >
+            <div className="mb-5 text-center">
+              <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4faf7] ring-1 ring-brand-100">
+                <PlatformLogo size="sm" showName={false} nameBelow={false} />
+              </span>
+              <h1 className="font-heading text-xl font-bold tracking-tight text-navy-900">
+                Partner Login
+              </h1>
+              <p className="mt-1 text-[13px] text-slate-500">
+                {SITE.platformName} · OTP after Admin approval
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit(onPasswordLogin)} className="space-y-3.5" noValidate>
+              <div>
+                <label
+                  htmlFor="partner-identifier"
+                  className="mb-1.5 block text-[12px] font-semibold text-slate-700"
                 >
-                  <Smartphone className="h-4 w-4" />
-                  Open Partner App
-                </button>
+                  Mobile / Email / Partner Code
+                </label>
+                <input
+                  id="partner-identifier"
+                  {...register('identifier', { required: 'Required' })}
+                  placeholder="9876543210 or DSA-XXXXXX"
+                  autoComplete="username"
+                  className={cn(inputClass, errors.identifier && 'border-red-400')}
+                />
+                {errors.identifier && (
+                  <p className="mt-1 text-[11px] text-red-600">{errors.identifier.message}</p>
+                )}
               </div>
 
-              <form onSubmit={handleSubmit(onPasswordLogin)} className="space-y-4" noValidate>
+              {loginMode === 'password' && (
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <label
+                      htmlFor="partner-password"
+                      className="text-[12px] font-semibold text-slate-700"
+                    >
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-[11px] font-medium text-brand-700 hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="partner-password"
+                      {...register('password')}
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      className={cn(inputClass, 'pr-10')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy-800"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {loginMode === 'otp' && otpRequested && (
                 <div>
                   <label
-                    htmlFor="partner-identifier"
-                    className="mb-1 block text-[11px] font-medium text-[var(--pf-text-secondary)]"
+                    htmlFor="partner-otp"
+                    className="mb-1.5 block text-[12px] font-semibold text-slate-700"
                   >
-                    Partner ID / Email
+                    Enter OTP
                   </label>
                   <input
-                    id="partner-identifier"
-                    {...register('identifier', { required: 'Required' })}
-                    placeholder="Partner ID or email address"
-                    autoComplete="username"
-                    className={cn(inputClass, errors.identifier && 'border-red-400')}
+                    id="partner-otp"
+                    {...register('otp')}
+                    placeholder="6-digit code"
+                    inputMode="numeric"
+                    maxLength={6}
+                    className={cn(inputClass, 'tracking-[0.2em]')}
                   />
-                  {errors.identifier && (
-                    <p className="mt-0.5 text-[11px] text-red-400">{errors.identifier.message}</p>
-                  )}
+                  <p className="mt-1.5 text-[11px] text-slate-400">
+                    Sent to your registered mobile
+                    {import.meta.env.DEV ? ' · Dev OTP: 123456' : ''}
+                  </p>
                 </div>
+              )}
 
-                {loginMode === 'password' && (
-                  <div>
-                    <div className="mb-1 flex items-center justify-between">
-                      <label
-                        htmlFor="partner-password"
-                        className="text-[11px] font-medium text-[var(--pf-text-secondary)]"
-                      >
-                        Password
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleForgotPassword}
-                        className="text-[11px] font-medium text-[var(--pf-primary)] hover:underline"
-                      >
-                        Forgot Password?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <input
-                        id="partner-password"
-                        {...register('password')}
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter your password"
-                        autoComplete="current-password"
-                        className={cn(inputClass, 'pr-10')}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--pf-text-muted)] hover:text-[var(--pf-text)]"
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                )}
+              {loginError && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700">
+                  {loginError}
+                </p>
+              )}
 
-                {loginMode === 'otp' && otpRequested && (
-                  <div>
-                    <label
-                      htmlFor="partner-otp"
-                      className="mb-1 block text-[11px] font-medium text-[var(--pf-text-secondary)]"
-                    >
-                      OTP
-                    </label>
-                    <input
-                      id="partner-otp"
-                      {...register('otp')}
-                      placeholder="6-digit OTP"
-                      inputMode="numeric"
-                      maxLength={6}
-                      className={inputClass}
-                    />
-                  </div>
-                )}
+              {loginSuccess && (
+                <p className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-[12px] text-brand-800">
+                  {loginSuccess}
+                </p>
+              )}
 
-                {loginError && (
-                  <p className="rounded-lg border border-red-400/30 bg-red-400/10 px-3 py-2 text-[11px] text-red-400">
-                    {loginError}
-                  </p>
-                )}
+              {redirecting && (
+                <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
+                  Opening {SITE.platformName} app…
+                </p>
+              )}
 
-                {loginSuccess && (
-                  <p className="rounded-lg border border-[var(--pf-primary)]/30 bg-[var(--pf-primary)]/10 px-3 py-2 text-[11px] text-[var(--pf-primary)]">
-                    {loginSuccess}
-                  </p>
-                )}
+              {loginMode === 'password' ? (
+                <button
+                  type="submit"
+                  disabled={isSubmitting || redirecting}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-700 py-3 text-sm font-semibold text-white shadow-md shadow-brand-900/25 transition hover:bg-brand-800 disabled:opacity-70"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {isSubmitting || redirecting ? 'Signing in…' : 'Sign in'}
+                </button>
+              ) : !otpRequested ? (
+                <button
+                  type="button"
+                  onClick={onRequestOtp}
+                  disabled={isSubmitting || redirecting}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-700 py-3 text-sm font-semibold text-white shadow-md shadow-brand-900/25 transition hover:bg-brand-800 disabled:opacity-70"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  Continue with OTP
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onOtpLogin}
+                  disabled={isSubmitting || redirecting}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-700 py-3 text-sm font-semibold text-white shadow-md shadow-brand-900/25 transition hover:bg-brand-800 disabled:opacity-70"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {isSubmitting || redirecting ? 'Verifying…' : 'Verify & sign in'}
+                </button>
+              )}
 
-                {redirecting && (
-                  <p className="rounded-lg border border-[var(--pf-border)] bg-[var(--pf-bg)]/60 px-3 py-2 text-[11px] text-[var(--pf-text-muted)]">
-                    Opening {SITE.platformName} app… If it doesn&apos;t open, download the app below.
-                  </p>
-                )}
-
-                {loginMode === 'password' ? (
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || redirecting}
-                    className="pf-btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-colors disabled:opacity-70"
-                  >
-                    <LogIn className="h-4 w-4" />
-                    {isSubmitting || redirecting ? 'Signing in…' : 'Login'}
-                  </button>
-                ) : !otpRequested ? (
-                  <button
-                    type="button"
-                    onClick={onRequestOtp}
-                    disabled={isSubmitting || redirecting}
-                    className="pf-btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-colors disabled:opacity-70"
-                  >
-                    <KeyRound className="h-4 w-4" />
-                    Send OTP
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={onOtpLogin}
-                    disabled={isSubmitting || redirecting}
-                    className="pf-btn-primary flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-colors disabled:opacity-70"
-                  >
-                    <KeyRound className="h-4 w-4" />
-                    {isSubmitting || redirecting ? 'Verifying…' : 'Verify OTP & Login'}
-                  </button>
-                )}
-
+              <div className="flex items-center justify-between pt-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -372,20 +423,36 @@ export function PartnerLogin() {
                     setLoginError(null)
                     setLoginSuccess(null)
                   }}
-                  className="w-full text-center text-xs font-medium text-[var(--pf-text-muted)] transition-colors hover:text-[var(--pf-primary)]"
+                  className="text-[12px] font-medium text-slate-500 hover:text-brand-800"
                 >
-                  {loginMode === 'password' ? 'Login with OTP' : 'Login with Password'}
+                  {loginMode === 'otp' ? 'Use password' : 'Use OTP'}
                 </button>
-              </form>
-            </motion.div>
+                <button
+                  type="button"
+                  onClick={handleOpenApp}
+                  className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-brand-700 hover:text-brand-900"
+                >
+                  <Smartphone className="h-3.5 w-3.5" />
+                  Open app
+                </button>
+              </div>
+            </form>
 
-            <p className="mt-4 text-center text-xs text-[var(--pf-text-muted)]">
+            <p className="mt-5 text-center text-[12px] text-slate-500">
               New partner?{' '}
-              <Link to={SITE.becomePartnerUrl} className="font-medium text-[var(--pf-primary)] hover:underline">
+              <Link
+                to={SITE.becomePartnerUrl}
+                className="font-semibold text-brand-700 hover:underline"
+              >
                 Register here
               </Link>
             </p>
-          </div>
+
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
+              <Lock className="h-3 w-3" />
+              Secure login · After Admin approval
+            </p>
+          </motion.div>
         </div>
       </section>
     </div>

@@ -19,7 +19,7 @@ const SETUP_HINT =
 
 function getSmtpApiUrl(): string {
   const base = (import.meta.env.VITE_LEAD_API_URL as string | undefined)?.replace(/\/$/, '')
-  const endpoint = '/api/send-lead'
+  const endpoint = '/api/send-lead.php'
   return base ? `${base}${endpoint}` : endpoint
 }
 
@@ -144,7 +144,7 @@ async function submitViaPhpMail(options: SubmitFormOptions): Promise<{ ok: boole
   const message = buildPlainMessage(body)
   const replyTo = resolveReplyTo(options, body)
 
-  const res = await fetch('/send-lead.php', {
+  const res = await fetch('/api/send-lead.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({

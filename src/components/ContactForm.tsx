@@ -26,6 +26,7 @@ interface ContactFormProps {
   source?: string
   variant?: 'default' | 'premium'
   title?: string
+  defaultLoanType?: string
 }
 
 export function ContactForm({
@@ -35,6 +36,7 @@ export function ContactForm({
   source = 'contact-form',
   variant = 'default',
   title = 'Get in touch',
+  defaultLoanType = '',
 }: ContactFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitOk, setSubmitOk] = useState(false)
@@ -45,7 +47,9 @@ export function ContactForm({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ContactFormData>()
+  } = useForm<ContactFormData>({
+    defaultValues: { loanType: defaultLoanType },
+  })
 
   const onSubmit = async (data: ContactFormData) => {
     if (data._gotcha) return
@@ -63,7 +67,7 @@ export function ContactForm({
 
     setSubmitOk(true)
     showSuccess('Enquiry saved. Our team will contact you shortly.')
-    reset()
+    reset({ loanType: defaultLoanType })
     onSuccess?.()
   }
 
@@ -81,10 +85,18 @@ export function ContactForm({
         animate={{ opacity: 1 }}
         className="rounded-2xl border border-green-200 bg-green-50 p-6 text-center"
       >
-        <p className="font-heading font-bold text-brand-900">Thank you!</p>
+        <p className="font-heading font-bold text-brand-900">Enquiry submitted</p>
         <p className="mt-1 text-sm text-gray-600">
-          Enquiry saved. Our team will contact you shortly.
+          Thank you. Our team will contact you shortly. A confirmation email has been sent if you
+          provided a valid email address.
         </p>
+        <button
+          type="button"
+          onClick={() => setSubmitOk(false)}
+          className="mt-4 text-sm font-semibold text-brand-700 hover:text-brand-900"
+        >
+          Submit another
+        </button>
       </motion.div>
     )
   }
@@ -95,7 +107,7 @@ export function ContactForm({
       onSubmit={handleSubmit(onSubmit)}
       className={cn(
         variant === 'premium'
-          ? 'relative space-y-3 rounded-3xl border border-brand-100 bg-white/80 p-6 shadow-xl ring-1 ring-brand-100/60 backdrop-blur md:p-7'
+          ? 'relative overflow-visible space-y-2.5 rounded-2xl border border-brand-100 bg-white p-4 shadow-[0_16px_48px_rgb(15_41_32/0.1)] ring-1 ring-brand-100/40'
           : 'relative space-y-3 rounded-2xl border border-gray-100 bg-white p-5 md:p-6',
         className,
       )}

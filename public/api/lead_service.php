@@ -226,12 +226,34 @@ function api_process_lead(PDO $pdo, array $config, array $data, string $defaultC
 
     $existing = api_lead_find_duplicate($pdo, $lead);
     if ($existing) {
+        // Still dual-write so Admin CRM gets the lead even on Hostinger duplicates
+        $dupLead = $existing;
+        if (is_array($dupLead)) {
+            $dupLead['full_name'] = $dupLead['full_name'] ?? $lead['full_name'];
+            $dupLead['phone'] = $dupLead['phone'] ?? $lead['phone'];
+            $dupLead['email'] = $dupLead['email'] ?? $lead['email'];
+            $dupLead['loan_type'] = $dupLead['loan_type'] ?? $lead['loan_type'];
+            $dupLead['loan_amount'] = $dupLead['loan_amount'] ?? $lead['loan_amount'];
+            $dupLead['city'] = $dupLead['city'] ?? $lead['city'];
+            $dupLead['form_type'] = $dupLead['form_type'] ?? $lead['form_type'];
+            $dupLead['source'] = $dupLead['source'] ?? $lead['source'];
+            $dupLead['page_url'] = $dupLead['page_url'] ?? $lead['page_url'];
+            $dupLead['external_lead_id'] = $dupLead['external_lead_id'] ?? $lead['external_lead_id'];
+        }
+        $kuberone = api_kuberone_sync_lead($config, $data, is_array($dupLead) ? $dupLead : $lead);
+
         return [
             'ok' => true,
             'id' => (int) $existing['id'],
             'duplicate' => true,
             'lead' => api_lead_public_response($existing),
             'message' => 'We already have your application. Reference #' . $existing['id'],
+            'kuberone' => [
+                'synced' => (bool) ($kuberone['ok'] ?? false),
+                'skipped' => (bool) ($kuberone['skipped'] ?? false),
+                'lead_number' => $kuberone['leadNumber'] ?? null,
+                'error' => $kuberone['error'] ?? null,
+            ],
         ];
     }
 
@@ -240,7 +262,6 @@ function api_process_lead(PDO $pdo, array $config, array $data, string $defaultC
     $lead['created_at'] = date('Y-m-d H:i:s');
     $lead['status'] = 'new';
 
-    $leadsEmail = $config['leads_email'] ?? 'loanleads@kuberfinserve.com';
     $formType = $lead['form_type'];
     $fullName = $lead['full_name'] ?? 'Applicant';
     $adminSubject = "New {$formType} — {$fullName} (#{$leadId})";
@@ -252,7 +273,8 @@ function api_process_lead(PDO $pdo, array $config, array $data, string $defaultC
     }
 
     $adminBody = api_build_admin_email_body($lead, $config);
-    $adminSent = api_send_mail($leadsEmail, $adminSubject, $adminBody, $config, $lead['email']);
+    $adminMail = api_send_mail_to_admins($adminSubject, $adminBody, $config, $lead['email']);
+    $adminSent = (bool) ($adminMail['sent'] ?? false);
     $userSent = api_send_user_confirmation($lead, $config);
 
     $kuberone = api_kuberone_sync_lead($config, $data, $lead);
@@ -266,6 +288,8 @@ function api_process_lead(PDO $pdo, array $config, array $data, string $defaultC
         'emails' => [
             'admin' => $adminSent,
             'user' => $userSent,
+            'admin_recipients' => $adminMail['recipients'] ?? [],
+            'smtp_configured' => api_smtp_configured($config),
         ],
         'kuberone' => [
             'synced' => (bool) ($kuberone['ok'] ?? false),

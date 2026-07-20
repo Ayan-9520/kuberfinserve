@@ -13,6 +13,10 @@ const Contact = lazy(() => import('@/pages/Contact').then((m) => ({ default: m.C
 const EmiCalculatorPage = lazy(() =>
   import('@/pages/EmiCalculator').then((m) => ({ default: m.EmiCalculatorPage })),
 )
+const CibilPage = lazy(() => import('@/pages/Cibil').then((m) => ({ default: m.CibilPage })))
+const CheckEligibilityPage = lazy(() =>
+  import('@/pages/CheckEligibility').then((m) => ({ default: m.CheckEligibilityPage })),
+)
 const ApplyLoan = lazy(() => import('@/pages/ApplyLoan').then((m) => ({ default: m.ApplyLoan })))
 const LoanPage = lazy(() => import('@/pages/LoanPage').then((m) => ({ default: m.LoanPage })))
 const Partners = lazy(() => import('@/pages/Partners').then((m) => ({ default: m.Partners })))
@@ -59,6 +63,8 @@ export function AppRoutes() {
         <Route path="insurance" element={<LazyWrap><Insurance /></LazyWrap>} />
         <Route path="credit-card" element={<LazyWrap><CreditCardPage /></LazyWrap>} />
         <Route path="emi-calculator" element={<LazyWrap><EmiCalculatorPage /></LazyWrap>} />
+        <Route path="cibil" element={<LazyWrap><CibilPage /></LazyWrap>} />
+        <Route path="check-eligibility" element={<LazyWrap><CheckEligibilityPage /></LazyWrap>} />
         <Route path="contact-us" element={<LazyWrap><Contact /></LazyWrap>} />
         <Route path="apply-loan" element={<LazyWrap><ApplyLoan /></LazyWrap>} />
         <Route path="loans/:slug" element={<LazyWrap><LoanPage /></LazyWrap>} />

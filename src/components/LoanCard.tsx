@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Car, Home, Briefcase, GraduationCap, Building2, Wallet, Landmark, Wrench,
+  Car, Home, Briefcase, GraduationCap, Building2, Wallet, Landmark, Wrench, TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
@@ -12,6 +12,7 @@ const iconMap: Record<string, LucideIcon> = {
   'home-loan': Home,
   'personal-loan': Wallet,
   'business-loan': Briefcase,
+  'working-capital': TrendingUp,
   'loan-against-property': Building2,
   'education-loan': GraduationCap,
   'machinery-loan': Wrench,

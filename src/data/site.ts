@@ -17,6 +17,10 @@ export const SITE = {
   logoMarkUrl: '/logo.png',
   logoLightUrl: '/logo-footer.png',
   logoIconUrl: '/logo.png',
+  /** KuberOne product mark (K1, transparent BG) — Partner Login, apps, KuberOne CTAs */
+  platformLogoUrl: '/kuberone-logo.png',
+  /** Same transparent K1 mark */
+  platformLogoClearUrl: '/kuberone-logo-clear.png',
   partnerCrmUrl: '/partner-login',
   partnersUrl: '/become-partner',
   becomePartnerUrl: '/become-partner',
@@ -58,22 +62,21 @@ export const LOAN_TYPES_FORM = [
   'Auto Loan (Used Car)',
   'Personal Loan',
   'Business Loan',
+  'Working Capital',
   'Education Loan',
   'Machinery Loan',
   'Insurance',
   'Credit Card',
+  'CIBIL Assistance',
 ] as const
 
-/** Navbar order: Home, About → Loans dropdown → Insurance, Credit Card */
+/** Navbar order: Home → Loans dropdown (incl. Credit Card) → Insurance */
 export const NAV_LINKS_BEFORE_LOANS = [
   { label: 'Home', path: '/' },
   { label: 'About Us', path: '/about-us' },
 ] as const
 
-export const NAV_LINKS_AFTER_LOANS = [
-  { label: 'Insurance', path: '/insurance' },
-  { label: 'Credit Card', path: '/credit-card' },
-] as const
+export const NAV_LINKS_AFTER_LOANS = [{ label: 'Insurance', path: '/insurance' }] as const
 
 export const CONTACT_NAV = { label: 'Contact Us', path: '/contact-us' } as const
 
@@ -84,8 +87,10 @@ export const LOAN_NAV = [
   { label: 'Used Car Loan', path: '/loans/used-car-loan' },
   { label: 'Personal Loan', path: '/loans/personal-loan' },
   { label: 'Business Loan', path: '/loans/business-loan' },
+  { label: 'Working Capital', path: '/loans/working-capital' },
   { label: 'Education Loan', path: '/loans/education-loan' },
   { label: 'Machinery Loan', path: '/loans/machinery-loan' },
+  { label: 'Credit Card', path: '/credit-card' },
 ] as const
 
 export const FOOTER_LINKS = {

@@ -142,7 +142,7 @@ try {
         'ok' => true,
         'id' => $partnerId,
         'status' => 'pending',
-        'message' => 'Application submitted successfully. Our verification team will contact you soon.',
+        'message' => 'Application submitted successfully. You will receive a confirmation email shortly. Login will be available after approval.',
         'notifications' => [
             'admin_email' => $adminSent,
             'user_email' => $userSent,

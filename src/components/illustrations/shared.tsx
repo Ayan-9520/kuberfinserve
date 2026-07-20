@@ -14,7 +14,7 @@ export const ILLU = {
   glass: 'rgba(255,255,255,0.08)',
   glassBorder: 'rgba(34,211,166,0.25)',
   skin: '#e8b896',
-  suit: '#0f172a',
+  suit: '#0a342c',
   city: '#1a3d42',
 } as const
 
@@ -30,7 +30,7 @@ export function IllustrationDefs() {
         <stop offset="100%" stopColor="#22d3a6" stopOpacity="0.1" />
       </linearGradient>
       <linearGradient id="illu-grad-sky" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#0f172a" />
+        <stop offset="0%" stopColor="#0a342c" />
         <stop offset="60%" stopColor="#071a1f" />
         <stop offset="100%" stopColor="#053d32" />
       </linearGradient>

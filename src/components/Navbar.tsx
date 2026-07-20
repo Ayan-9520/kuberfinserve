@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, Menu, X } from 'lucide-react'
+import { ChevronDown, Menu, Phone, X } from 'lucide-react'
 import { LOAN_NAV, SITE } from '@/data/site'
 import { useScrolled } from '@/hooks/useScrolled'
 import { cn } from '@/utils/cn'
@@ -10,15 +10,24 @@ import { BrandLogo } from '@/components/BrandLogo'
 const MAIN_LINKS = [
   { label: 'Home', path: '/' },
   { label: 'Insurance', path: '/insurance' },
-  { label: 'Credit Cards', path: '/credit-card' },
   { label: 'EMI Calculator', path: '/emi-calculator' },
+  { label: 'Check Eligibility', path: '/check-eligibility' },
+  { label: 'CIBIL', path: '/cibil' },
   { label: 'About Us', path: '/about-us' },
   { label: 'Contact', path: '/contact-us' },
   { label: 'Become Partner', path: SITE.becomePartnerUrl },
   { label: 'Partner Login', path: SITE.partnerLoginUrl },
 ] as const
 
-function NavItem({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) {
+function NavItem({
+  to,
+  children,
+  onClick,
+}: {
+  to: string
+  children: ReactNode
+  onClick?: () => void
+}) {
   const location = useLocation()
   const isHash = to.includes('#')
   const hash = isHash ? to.split('#')[1] : ''
@@ -62,10 +71,39 @@ function NavItem({ to, children, onClick }: { to: string; children: React.ReactN
   )
 }
 
+function MobileNavLink({
+  to,
+  children,
+  onClick,
+}: {
+  to: string
+  children: ReactNode
+  onClick?: () => void
+}) {
+  return (
+    <NavLink
+      to={to}
+      end={to === '/'}
+      onClick={onClick}
+      className={({ isActive }) =>
+        cn(
+          'block rounded-2xl px-4 py-3 text-center text-[15px] font-semibold tracking-tight transition-all',
+          isActive
+            ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25'
+            : 'text-navy-900 hover:bg-brand-50 hover:text-brand-800',
+        )
+      }
+    >
+      {children}
+    </NavLink>
+  )
+}
+
 export function Navbar() {
   const scrolled = useScrolled(20)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loansOpen, setLoansOpen] = useState(false)
+  const [mobileLoansOpen, setMobileLoansOpen] = useState(true)
   const closeMobile = () => setMobileOpen(false)
 
   return (
@@ -74,12 +112,14 @@ export function Navbar() {
         className={cn(
           'sticky z-50 transition-all duration-300 lg:top-7',
           scrolled
-            ? 'top-0 border-b border-slate-200/80 bg-white/90 shadow-[0_8px_32px_rgb(15_23_42/0.08)] backdrop-blur-xl'
-            : 'top-0 border-b border-transparent bg-white/80 backdrop-blur-md',
+            ? 'top-0 border-b border-slate-200/80 bg-white/95 shadow-[0_8px_32px_rgb(15_23_42/0.08)] backdrop-blur-xl'
+            : 'top-0 border-b border-slate-200/70 bg-white',
         )}
       >
-        <div className="container mx-auto flex items-center justify-between gap-3 px-4 py-2 lg:py-2">
-          <BrandLogo showName compact />
+        <div className="container relative mx-auto flex items-center justify-between gap-3 px-4 py-2.5 lg:py-2">
+          <div className="relative z-10">
+            <BrandLogo showName compact />
+          </div>
 
           <nav className="hidden items-center gap-0.5 2xl:flex" aria-label="Main navigation">
             <NavItem to="/">Home</NavItem>
@@ -105,7 +145,7 @@ export function Navbar() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200/80 bg-white py-2 shadow-xl"
+                    className="absolute left-0 top-full z-50 mt-2 max-h-[min(70vh,22rem)] w-60 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white py-2 shadow-xl"
                   >
                     {LOAN_NAV.map((loan) => (
                       <Link
@@ -139,11 +179,11 @@ export function Navbar() {
 
           <button
             type="button"
-            className="rounded-lg p-2 text-navy-900 2xl:hidden"
+            className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-navy-900 ring-1 ring-brand-100 transition hover:bg-brand-100 2xl:hidden"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5" />
           </button>
         </div>
       </header>
@@ -155,51 +195,111 @@ export function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-navy-900/50 backdrop-blur-sm 2xl:hidden"
+              className="fixed inset-0 z-[60] bg-navy-900/45 backdrop-blur-md 2xl:hidden"
               onClick={closeMobile}
             />
             <motion.aside
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed right-0 top-0 z-[70] flex h-full w-[min(320px,88vw)] flex-col bg-white shadow-2xl 2xl:hidden"
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.98 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+              className="fixed inset-x-3 bottom-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[70] flex flex-col overflow-hidden rounded-[1.75rem] bg-gradient-to-b from-white via-white to-brand-50/40 shadow-[0_24px_80px_-12px_rgba(15,23,42,0.35)] ring-1 ring-brand-900/10 2xl:hidden sm:inset-x-6"
             >
-              <div className="flex items-center justify-between border-b p-4">
-                <span className="font-heading font-bold text-navy-900">Menu</span>
-                <button type="button" onClick={closeMobile} aria-label="Close menu">
-                  <X className="h-6 w-6" />
+              <div className="relative border-b border-brand-100/80 bg-white/90 px-5 pb-4 pt-5 backdrop-blur-sm">
+                <button
+                  type="button"
+                  onClick={closeMobile}
+                  aria-label="Close menu"
+                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-navy-900 transition hover:bg-slate-200"
+                >
+                  <X className="h-4 w-4" />
                 </button>
+                <div className="flex flex-col items-center gap-2.5 pr-6">
+                  <img
+                    src={SITE.logoUrl}
+                    alt=""
+                    className="h-11 w-11 object-contain"
+                    width={44}
+                    height={44}
+                  />
+                  <p className="font-heading text-base font-bold tracking-tight text-navy-900">
+                    {SITE.name}
+                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-700">
+                    Menu
+                  </p>
+                </div>
               </div>
-              <nav className="flex-1 overflow-y-auto p-4">
-                <NavItem to="/" onClick={closeMobile}>Home</NavItem>
-                <p className="mb-2 mt-4 px-3 text-xs font-semibold uppercase text-slate-400">Loans</p>
-                {LOAN_NAV.map((loan) => (
-                  <Link
-                    key={loan.path}
-                    to={loan.path}
-                    onClick={closeMobile}
-                    className="mb-1 block rounded-xl px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+
+              <nav className="flex-1 overflow-y-auto px-4 py-5">
+                <div className="mx-auto flex max-w-sm flex-col items-stretch gap-1.5">
+                  <MobileNavLink to="/" onClick={closeMobile}>
+                    Home
+                  </MobileNavLink>
+
+                  <button
+                    type="button"
+                    onClick={() => setMobileLoansOpen((v) => !v)}
+                    className="mt-3 flex items-center justify-center gap-1.5 px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
                   >
-                    {loan.label}
-                  </Link>
-                ))}
-                {MAIN_LINKS.slice(1).map((link) => (
-                  <div key={link.path} className="mt-1">
-                    <NavItem to={link.path} onClick={closeMobile}>
-                      {link.label}
-                    </NavItem>
+                    Loans
+                    <ChevronDown
+                      className={cn(
+                        'h-3.5 w-3.5 transition-transform',
+                        mobileLoansOpen && 'rotate-180',
+                      )}
+                    />
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {mobileLoansOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mb-2 grid grid-cols-1 gap-1 rounded-2xl bg-slate-50/80 p-2 ring-1 ring-slate-100">
+                          {LOAN_NAV.map((loan) => (
+                            <Link
+                              key={loan.path}
+                              to={loan.path}
+                              onClick={closeMobile}
+                              className="rounded-xl px-3 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-white hover:text-brand-800 hover:shadow-sm"
+                            >
+                              {loan.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="mt-2 space-y-1">
+                    {MAIN_LINKS.slice(1).map((link) => (
+                      <MobileNavLink key={link.path} to={link.path} onClick={closeMobile}>
+                        {link.label}
+                      </MobileNavLink>
+                    ))}
                   </div>
-                ))}
+                </div>
               </nav>
-              <div className="space-y-2 border-t p-4">
+
+              <div className="space-y-2.5 border-t border-brand-100/80 bg-white/95 px-5 py-4 backdrop-blur-sm">
                 <Link
                   to={SITE.applyLoanUrl}
                   onClick={closeMobile}
-                  className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-brand-700 to-brand-600 py-3.5 font-bold text-white"
+                  className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-brand-700 to-brand-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-600/25"
                 >
                   Apply Now
                 </Link>
+                <a
+                  href={`tel:${SITE.phone.replace(/\s/g, '')}`}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-brand-100 bg-brand-50/60 py-3 text-sm font-semibold text-brand-900"
+                >
+                  <Phone className="h-4 w-4" />
+                  {SITE.phone}
+                </a>
               </div>
             </motion.aside>
           </>

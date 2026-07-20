@@ -4,16 +4,14 @@ import {
   MapPin,
   Mail,
   Phone,
-  QrCode,
-  Smartphone,
   ExternalLink,
   ArrowUpRight,
 } from 'lucide-react'
 import { SITE, FOOTER_LINKS, LOAN_NAV } from '@/data/site'
-import { BrandLogo } from '@/components/BrandLogo'
 import { SocialLinks } from '@/components/SocialLinks'
 import { OfficeMap } from '@/components/OfficeMap'
-import { downloadMobileApp, openMobileApp } from '@/utils/partnerApp'
+import { StoreBadges } from '@/components/StoreBadges'
+import { openMobileApp } from '@/utils/partnerApp'
 import { cn } from '@/utils/cn'
 
 const BRAND_FIN_COLOR = '#00c389'
@@ -38,11 +36,10 @@ function FooterHeading({ children, className }: { children: ReactNode; className
   return (
     <h3
       className={cn(
-        'mb-4 flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white',
+        'mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400',
         className,
       )}
     >
-      <span className="h-4 w-0.5 rounded-full bg-gradient-to-b from-brand-400 to-brand-600" />
       {children}
     </h3>
   )
@@ -53,17 +50,20 @@ function FooterLink({
   children,
   highlight,
   external,
+  centered,
 }: {
   to: string
   children: ReactNode
   highlight?: boolean
   external?: boolean
+  centered?: boolean
 }) {
   const className = cn(
     'group inline-flex items-center gap-2 text-[13px] leading-snug transition-all duration-200',
+    centered && 'justify-center',
     highlight
-      ? 'font-medium text-brand-300 hover:text-brand-200'
-      : 'text-slate-400 hover:translate-x-0.5 hover:text-white',
+      ? 'font-medium text-brand-700 hover:text-brand-800'
+      : 'text-slate-600 hover:translate-x-0.5 hover:text-navy-900',
   )
 
   if (external || to.startsWith('http') || to.startsWith('tel:') || to.startsWith('mailto:')) {
@@ -74,7 +74,9 @@ function FooterLink({
         target={external ? '_blank' : undefined}
         rel={external ? 'noopener noreferrer' : undefined}
       >
-        <span className="h-px w-0 bg-brand-400 transition-all duration-200 group-hover:w-2.5" />
+        {!centered && (
+          <span className="h-px w-0 bg-brand-400 transition-all duration-200 group-hover:w-2.5" />
+        )}
         {children}
       </a>
     )
@@ -82,7 +84,9 @@ function FooterLink({
 
   return (
     <Link to={to} className={className}>
-      <span className="h-px w-0 bg-brand-400 transition-all duration-200 group-hover:w-2.5" />
+      {!centered && (
+        <span className="h-px w-0 bg-brand-400 transition-all duration-200 group-hover:w-2.5" />
+      )}
       {children}
     </Link>
   )
@@ -92,109 +96,91 @@ const QUICK_LINKS = [
   { label: 'Home', path: '/' },
   { label: 'About Us', path: '/about-us' },
   { label: 'EMI Calculator', path: '/emi-calculator' },
+  { label: 'Check Eligibility', path: '/check-eligibility' },
+  { label: 'CIBIL Assistance', path: '/cibil' },
   { label: 'Apply Loan', path: '/apply-loan' },
   { label: 'Contact Us', path: '/contact-us' },
   { label: 'Partner Login', path: SITE.partnerLoginUrl },
 ] as const
 
-function FooterAppRow({
+function FooterAppCard({
   label,
+  blurb,
   target,
 }: {
   label: string
+  blurb: string
   target: 'customer' | 'partner'
 }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-xl border border-emerald-200/60 bg-white/70 p-3.5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600/10 text-emerald-700 ring-1 ring-emerald-600/20">
-          <Smartphone className="h-4 w-4" />
+    <div className="group flex min-w-0 flex-col items-center gap-5 rounded-2xl bg-white/90 p-5 text-center ring-1 ring-brand-900/[0.06] transition duration-300 hover:shadow-[0_12px_40px_-12px_rgba(13,107,87,0.18)] hover:ring-brand-600/20 sm:items-start sm:p-6 sm:text-left">
+      <div className="flex w-full flex-col items-center gap-4 sm:flex-row sm:items-start">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-emerald-50 ring-1 ring-brand-100">
+          <img
+            src={SITE.platformLogoUrl}
+            alt=""
+            className="h-7 w-7 object-contain"
+            width={28}
+            height={28}
+          />
         </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-extrabold text-navy-900">{label}</p>
-          <p className="text-[11px] text-slate-600">
-            {target === 'customer' ? 'Apply on mobile' : `Powered by ${SITE.platformName}`}
-          </p>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col items-center gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
+            <p className="font-heading text-base font-bold tracking-tight text-navy-900">{label}</p>
+            <button
+              type="button"
+              onClick={() => openMobileApp(target)}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 transition-colors hover:text-brand-900"
+            >
+              Open app
+              <ExternalLink className="h-3 w-3" />
+            </button>
+          </div>
+          <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{blurb}</p>
         </div>
       </div>
-      <div className="flex shrink-0 gap-2">
-        <button
-          type="button"
-          onClick={() => downloadMobileApp(target)}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 px-3 py-2 text-[11px] font-extrabold text-white shadow-md shadow-emerald-600/20 transition-transform hover:scale-[1.02] sm:flex-none sm:px-4"
-        >
-          Download
-        </button>
-        <button
-          type="button"
-          onClick={() => openMobileApp(target)}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-emerald-200/70 bg-white px-3 py-2 text-[11px] font-bold text-emerald-900 transition-colors hover:bg-emerald-50 sm:flex-none sm:px-4"
-        >
-          <ExternalLink className="h-3 w-3" />
-          Open
-        </button>
-      </div>
+      <StoreBadges target={target} size="sm" className="justify-center sm:justify-start" />
     </div>
   )
 }
 
 function FooterAppBand() {
   return (
-    <div className="relative border-b border-white/10">
+    <div className="relative border-b border-brand-100/80">
       <div
-        className="absolute inset-0 bg-gradient-to-r from-white via-emerald-50 to-white"
+        className="absolute inset-0 bg-[linear-gradient(180deg,#f3faf7_0%,#ffffff_100%)]"
         aria-hidden
       />
       <div
-        className="absolute inset-0 opacity-[0.08] [background-image:radial-gradient(circle_at_20%_10%,rgba(16,185,129,0.55),transparent_45%),radial-gradient(circle_at_80%_90%,rgba(20,184,166,0.45),transparent_55%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-300/50 to-transparent"
         aria-hidden
       />
-      <div className="container relative mx-auto px-4 py-5 md:py-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
-          <div className="shrink-0 lg:max-w-[12rem]">
-            <h3 className="mb-1 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.22em] text-navy-900">
-              <span className="h-4 w-0.5 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
-              Mobile Apps
+      <div className="container relative mx-auto px-4 py-8 md:py-10 lg:py-11">
+        <div className="mb-6 flex flex-col items-center gap-2 text-center sm:mb-7 sm:items-end sm:justify-between sm:gap-4 sm:text-left md:flex-row">
+          <div className="sm:text-left">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-700">
+              Mobile apps
+            </p>
+            <h3 className="mt-1.5 font-heading text-xl font-bold tracking-tight text-navy-900 md:text-2xl">
+              Take {SITE.platformName} with you
             </h3>
-            <p className="text-[11px] leading-relaxed text-slate-600">
-              Same CRM on web &amp; app
-            </p>
-            <div className="mt-2.5 flex gap-2">
-              <a
-                href={SITE.customerApp.androidStoreUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-md border border-emerald-200/70 bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 transition-colors hover:bg-white"
-              >
-                Android
-              </a>
-              <a
-                href={SITE.customerApp.iosStoreUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-md border border-emerald-200/70 bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 transition-colors hover:bg-white"
-              >
-                iOS
-              </a>
-            </div>
           </div>
+          <p className="max-w-sm text-sm leading-relaxed text-slate-500">
+            Same CRM on web and app — apply, track, and manage from anywhere.
+          </p>
+        </div>
 
-          <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2">
-            <FooterAppRow label="Customer App" target="customer" />
-            <FooterAppRow label="Partner App" target="partner" />
-          </div>
-
-          <div
-            className="flex shrink-0 items-center gap-3 self-center rounded-xl border border-dashed border-emerald-200/60 bg-white/70 px-4 py-3 lg:flex-col lg:px-3 lg:py-4"
-            aria-hidden
-          >
-            <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-emerald-200/60 bg-white text-emerald-700 shadow-sm">
-              <QrCode className="h-6 w-6 stroke-[1.25]" />
-            </div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 lg:text-center">
-              Scan to download
-            </p>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 md:gap-5">
+          <FooterAppCard
+            label="Customer App"
+            blurb="Apply for loans and track your application on the go."
+            target="customer"
+          />
+          <FooterAppCard
+            label="Partner App"
+            blurb="Manage leads, cases, and payouts with your partner desk."
+            target="partner"
+          />
         </div>
       </div>
     </div>
@@ -203,85 +189,104 @@ function FooterAppBand() {
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-navy-950 text-slate-400">
+    <footer className="relative overflow-hidden border-t border-brand-100/80 bg-white text-slate-600">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(0,195,137,0.1),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_40%_at_50%_0%,rgba(13,107,87,0.05),transparent)]"
         aria-hidden
       />
 
-      {/* Apps — footer ke andar, sabse upar (pre-footer band) */}
       <FooterAppBand />
 
-      <div className="container relative mx-auto px-4 py-12 md:py-14 lg:py-16">
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-8 xl:gap-10">
+      <div className="container relative mx-auto px-4 py-14 md:py-16 lg:py-20">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-10 xl:gap-12">
           {/* Brand */}
-          <div className="lg:col-span-4">
-            <div className="flex items-center gap-3.5">
-              <div className="rounded-2xl bg-white/5 p-1 ring-1 ring-white/10">
-                <BrandLogo variant="light" className="!h-14 !w-14 lg:!h-16 lg:!w-16" linkToHome={false} />
-              </div>
-              <div>
-                <BrandName className="font-heading text-xl font-bold tracking-tight text-white" />
-                <p className="mt-1 text-[11px] font-medium tracking-wide text-slate-500">
+          <div className="flex flex-col items-center text-center lg:col-span-4 lg:items-start lg:text-left">
+            <Link
+              to="/"
+              className="group inline-flex max-w-full flex-col items-center gap-3.5 transition-opacity hover:opacity-95 sm:flex-row lg:items-center"
+              aria-label={SITE.name}
+            >
+              <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-50/80 ring-1 ring-brand-100">
+                <img
+                  src={SITE.logoUrl}
+                  alt=""
+                  className="h-9 w-9 object-contain"
+                  width={36}
+                  height={36}
+                />
+              </span>
+              <div className="min-w-0">
+                <BrandName className="font-heading text-xl font-bold leading-tight tracking-tight text-navy-900" />
+                <p className="mt-1 text-[11px] font-medium leading-snug tracking-wide text-slate-500">
                   A unit of MoneyMines Infosource &amp; E-Services
                 </p>
               </div>
-            </div>
-            <p className="mt-5 max-w-sm text-sm leading-[1.7] text-slate-500">
-              India&apos;s AI powered financial distribution platform — helping customers find the
-              right financial solutions while empowering professionals to build successful businesses.
+            </Link>
+            <p className="mt-6 max-w-sm text-[15px] leading-[1.75] text-slate-500">
+              India&apos;s AI-powered financial distribution platform — helping customers find the
+              right solutions while empowering professionals to grow.
             </p>
             <Link
               to={SITE.becomePartnerUrl}
-              className="mt-5 inline-flex items-center gap-2 rounded-full border border-brand-500/25 bg-brand-500/10 px-4 py-2 text-xs font-semibold text-brand-300 transition-all hover:border-brand-400/40 hover:bg-brand-500/15 hover:text-brand-200"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm shadow-brand-600/20 transition hover:bg-brand-700"
             >
               Become a Partner
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
-            <div className="mt-6">
-              <SocialLinks size="sm" align="start" />
+            <div className="mt-7">
+              <SocialLinks size="sm" align="center" className="lg:justify-start" />
             </div>
           </div>
 
           {/* Link columns */}
-          <div className="grid gap-8 sm:grid-cols-3 lg:col-span-5">
-            <div>
-              <FooterHeading>Quick Links</FooterHeading>
-              <ul className="space-y-2.5">
+          <div className="grid gap-10 sm:grid-cols-3 lg:col-span-5">
+            <div className="text-center sm:text-left">
+              <FooterHeading className="justify-center sm:justify-start">Quick Links</FooterHeading>
+              <ul className="space-y-3">
                 {QUICK_LINKS.map((link) => (
-                  <li key={link.path}>
-                    <FooterLink to={link.path}>{link.label}</FooterLink>
+                  <li key={link.path} className="flex justify-center sm:justify-start">
+                    <FooterLink to={link.path} centered>
+                      {link.label}
+                    </FooterLink>
                   </li>
                 ))}
               </ul>
             </div>
-            <div>
+            <div className="text-center sm:text-left">
               <FooterHeading>Loans</FooterHeading>
-              <ul className="space-y-2.5">
+              <ul className="space-y-3">
                 {LOAN_NAV.map((loan) => (
-                  <li key={loan.path}>
-                    <FooterLink to={loan.path}>{loan.label}</FooterLink>
+                  <li key={loan.path} className="flex justify-center sm:justify-start">
+                    <FooterLink to={loan.path} centered>
+                      {loan.label}
+                    </FooterLink>
                   </li>
                 ))}
               </ul>
             </div>
-            <div>
+            <div className="text-center sm:text-left">
               <FooterHeading>More</FooterHeading>
-              <ul className="space-y-2.5">
-                <li>
-                  <FooterLink to="/insurance">Insurance</FooterLink>
+              <ul className="space-y-3">
+                <li className="flex justify-center sm:justify-start">
+                  <FooterLink to="/insurance" centered>
+                    Insurance
+                  </FooterLink>
                 </li>
-                <li>
-                  <FooterLink to="/credit-card">Credit Cards</FooterLink>
+                <li className="flex justify-center sm:justify-start">
+                  <FooterLink to="/credit-card" centered>
+                    Credit Cards
+                  </FooterLink>
                 </li>
-                <li>
-                  <FooterLink to={SITE.becomePartnerUrl} highlight>
+                <li className="flex justify-center sm:justify-start">
+                  <FooterLink to={SITE.becomePartnerUrl} highlight centered>
                     Become Partner
                   </FooterLink>
                 </li>
                 {FOOTER_LINKS.legal.slice(0, 3).map((link) => (
-                  <li key={link.path}>
-                    <FooterLink to={link.path}>{link.label}</FooterLink>
+                  <li key={link.path} className="flex justify-center sm:justify-start">
+                    <FooterLink to={link.path} centered>
+                      {link.label}
+                    </FooterLink>
                   </li>
                 ))}
               </ul>
@@ -290,17 +295,17 @@ export function Footer() {
 
           {/* Contact */}
           <div className="lg:col-span-3">
-            <FooterHeading>Contact</FooterHeading>
-            <ul className="space-y-2.5">
+            <FooterHeading className="text-center lg:text-left">Contact</FooterHeading>
+            <ul className="space-y-4">
               <li>
                 <a
                   href={`tel:${SITE.phone.replace(/\s/g, '')}`}
-                  className="group flex gap-3 rounded-xl border border-white/5 bg-white/[0.03] p-3 transition-colors hover:border-brand-500/20 hover:bg-white/[0.05]"
+                  className="group flex items-start justify-center gap-3 transition-colors lg:justify-start"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 ring-1 ring-brand-100">
                     <Phone className="h-3.5 w-3.5" />
                   </span>
-                  <span className="min-w-0 pt-0.5 text-sm text-slate-300 group-hover:text-white">
+                  <span className="min-w-0 pt-1.5 text-sm text-slate-600 group-hover:text-navy-900">
                     {SITE.phone}
                   </span>
                 </a>
@@ -308,12 +313,12 @@ export function Footer() {
               <li>
                 <a
                   href={`mailto:${SITE.email}`}
-                  className="group flex gap-3 rounded-xl border border-white/5 bg-white/[0.03] p-3 transition-colors hover:border-brand-500/20 hover:bg-white/[0.05]"
+                  className="group flex items-start justify-center gap-3 transition-colors lg:justify-start"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 ring-1 ring-brand-100">
                     <Mail className="h-3.5 w-3.5" />
                   </span>
-                  <span className="min-w-0 break-all pt-0.5 text-sm text-slate-300 group-hover:text-white">
+                  <span className="min-w-0 break-all pt-1.5 text-sm text-slate-600 group-hover:text-navy-900">
                     {SITE.email}
                   </span>
                 </a>
@@ -323,25 +328,25 @@ export function Footer() {
                   href={SITE.mapDirectionsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex gap-3 rounded-xl border border-white/5 bg-white/[0.03] p-3 transition-colors hover:border-brand-500/20 hover:bg-white/[0.05]"
+                  className="group mx-auto flex max-w-xs items-start justify-center gap-3 transition-colors lg:mx-0 lg:max-w-none lg:justify-start"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 ring-1 ring-brand-100">
                     <MapPin className="h-3.5 w-3.5" />
                   </span>
-                  <span className="min-w-0 pt-0.5 text-sm leading-snug text-slate-300 group-hover:text-white">
+                  <span className="min-w-0 pt-1.5 text-left text-sm leading-relaxed text-slate-600 group-hover:text-navy-900">
                     {SITE.address}
                   </span>
                 </a>
               </li>
             </ul>
-            <div className="relative mt-4 overflow-hidden rounded-xl border border-white/10">
-              <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-navy-950/80 via-transparent to-transparent" />
-              <OfficeMap heightClass="h-32 w-full grayscale-[25%]" />
+            <div className="relative mx-auto mt-6 max-w-sm overflow-hidden rounded-2xl ring-1 ring-brand-900/[0.06] lg:mx-0 lg:max-w-none">
+              <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-white/70 via-transparent to-transparent" />
+              <OfficeMap heightClass="h-28 w-full grayscale-[20%]" />
               <a
                 href={SITE.mapDirectionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute bottom-2 right-2 z-20 inline-flex items-center gap-1 rounded-md bg-navy-900/90 px-2 py-1 text-[10px] font-medium text-brand-300 ring-1 ring-white/10 backdrop-blur-sm hover:text-brand-200"
+                className="absolute bottom-2.5 right-2.5 z-20 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-semibold text-brand-800 shadow-sm ring-1 ring-brand-100 hover:text-brand-900"
               >
                 Directions
                 <ArrowUpRight className="h-3 w-3" />
@@ -350,18 +355,17 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-7 lg:flex-row">
-          <p className="text-center text-xs text-slate-500 lg:text-left">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-8 lg:flex-row">
+          <p className="text-center text-xs text-slate-400 lg:text-left">
             © {new Date().getFullYear()} {SITE.name}. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-2">
             {FOOTER_LINKS.legal.map((link, i) => (
               <span key={link.path} className="inline-flex items-center">
-                {i > 0 && <span className="mx-2 hidden text-slate-700 sm:inline">·</span>}
+                {i > 0 && <span className="mx-2.5 hidden text-slate-200 sm:inline">·</span>}
                 <Link
                   to={link.path}
-                  className="px-1 text-xs text-slate-500 transition-colors hover:text-brand-300"
+                  className="px-1 text-xs text-slate-400 transition-colors hover:text-brand-700"
                 >
                   {link.label}
                 </Link>

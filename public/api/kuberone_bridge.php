@@ -9,8 +9,34 @@ declare(strict_types=1);
 
 function api_kuberone_enabled(array $config): bool
 {
+    if (empty($config['kuberone_bridge_enabled'])) {
+        return false;
+    }
     $base = trim((string) ($config['kuberone_api_base'] ?? ''));
-    return $base !== '' && !empty($config['kuberone_bridge_enabled']);
+    if ($base === '') {
+        return false;
+    }
+    // Reject unedited placeholders from config.example.php
+    if (stripos($base, 'YOUR-KUBERONE') !== false || stripos($base, 'example.com') !== false) {
+        return false;
+    }
+    return true;
+}
+
+/** Recursively drop null / empty-string values (Zod rejects null on optional fields). */
+function api_kuberone_strip_nulls(mixed $value): mixed
+{
+    if (!is_array($value)) {
+        return $value;
+    }
+    $out = [];
+    foreach ($value as $k => $v) {
+        if ($v === null || $v === '') {
+            continue;
+        }
+        $out[$k] = is_array($v) ? api_kuberone_strip_nulls($v) : $v;
+    }
+    return $out;
 }
 
 /**
@@ -33,21 +59,28 @@ function api_kuberone_request(array $config, string $method, string $path, array
         $headers[] = 'X-Website-Api-Key: ' . $apiKey;
     }
 
-    $body = json_encode($payload, JSON_UNESCAPED_UNICODE);
+    // Strip null/empty so Zod validation on KuberOne does not fail
+    $methodUpper = strtoupper($method);
+    $clean = api_kuberone_strip_nulls($payload);
+    $body = json_encode($clean, JSON_UNESCAPED_UNICODE);
     if ($body === false) {
         return ['ok' => false, 'error' => 'JSON encode failed'];
     }
+    $sendBody = $methodUpper !== 'GET' && $methodUpper !== 'HEAD';
 
     if (function_exists('curl_init')) {
         $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_CUSTOMREQUEST => strtoupper($method),
-            CURLOPT_POSTFIELDS => $body,
+        $opts = [
+            CURLOPT_CUSTOMREQUEST => $methodUpper,
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 8,
             CURLOPT_CONNECTTIMEOUT => 4,
-        ]);
+        ];
+        if ($sendBody) {
+            $opts[CURLOPT_POSTFIELDS] = $body;
+        }
+        curl_setopt_array($ch, $opts);
         $raw = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err = curl_error($ch);
@@ -62,18 +95,20 @@ function api_kuberone_request(array $config, string $method, string $path, array
             'ok' => $status >= 200 && $status < 300,
             'status' => $status,
             'body' => is_array($decoded) ? $decoded : ['raw' => $raw],
+            'error' => $status >= 200 && $status < 300 ? null : (is_array($decoded) ? ($decoded['error']['message'] ?? $decoded['message'] ?? "HTTP {$status}") : "HTTP {$status}"),
         ];
     }
 
-    $context = stream_context_create([
-        'http' => [
-            'method' => strtoupper($method),
-            'header' => implode("\r\n", $headers),
-            'content' => $body,
-            'timeout' => 8,
-            'ignore_errors' => true,
-        ],
-    ]);
+    $http = [
+        'method' => $methodUpper,
+        'header' => implode("\r\n", $headers),
+        'timeout' => 8,
+        'ignore_errors' => true,
+    ];
+    if ($sendBody) {
+        $http['content'] = $body;
+    }
+    $context = stream_context_create(['http' => $http]);
     $raw = @file_get_contents($url, false, $context);
     $status = 0;
     if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $m)) {
@@ -87,6 +122,7 @@ function api_kuberone_request(array $config, string $method, string $path, array
         'ok' => $status >= 200 && $status < 300,
         'status' => $status,
         'body' => is_array($decoded) ? $decoded : ['raw' => $raw],
+        'error' => $status >= 200 && $status < 300 ? null : (is_array($decoded) ? ($decoded['error']['message'] ?? $decoded['message'] ?? "HTTP {$status}") : "HTTP {$status}"),
     ];
 }
 
@@ -218,7 +254,9 @@ function api_kuberone_sync_partner(array $config, array $partner): array
         'contactName' => $partner['full_name'] ?? '',
         'phone' => $phone,
         'email' => $partner['email'] ?? null,
-        'businessName' => $partner['company_name'] ?? null,
+        'businessName' => $partner['company_name']
+            ?: ($partner['business_type'] ?? null)
+            ?: ($partner['full_name'] ?? null),
         'partnerTypeCode' => 'DSA',
         'city' => $partner['city'] ?? null,
         'state' => $partner['state'] ?? null,
@@ -245,88 +283,116 @@ function api_kuberone_sync_partner(array $config, array $partner): array
 }
 
 /**
- * Optional partner OTP login via KuberOne (aligned with DSA app auth).
- * Hostinger password login remains unchanged.
+ * Partner OTP login via KuberOne public website partner-auth endpoint.
+ * Accepts mobile, email, or Partner Code; OTP is sent to registered mobile.
  *
- * @return array{ok:bool, skipped?:bool, token?:string, partner?:array, error?:string, otp_sent?:bool, message?:string, must_change_password?:bool}
+ * @return array{ok:bool, skipped?:bool, token?:string, partner?:array, error?:string, otp_sent?:bool, message?:string, must_change_password?:bool, phone_hint?:string}
  */
-function api_kuberone_partner_otp(array $config, string $mode, string $phone, ?string $otp = null): array
+function api_kuberone_partner_otp(array $config, string $mode, string $identifier, ?string $otp = null): array
 {
     if (empty($config['kuberone_partner_auth_enabled']) || !api_kuberone_enabled($config)) {
         return ['ok' => false, 'skipped' => true, 'error' => 'KuberOne partner auth disabled'];
     }
 
-    $digits = preg_replace('/\D+/', '', $phone);
-    if (strlen($digits) === 12 && substr($digits, 0, 2) === '91') {
-        $digits = substr($digits, 2);
-    }
-    if (!preg_match('/^[6-9]\d{9}$/', $digits)) {
-        return ['ok' => false, 'error' => 'Valid 10-digit mobile required for KuberOne OTP'];
+    $identifier = trim($identifier);
+    if ($identifier === '') {
+        return ['ok' => false, 'error' => 'Mobile, email, or Partner Code is required'];
     }
 
+    $payload = [
+        'mode' => $mode,
+        'identifier' => $identifier,
+    ];
+    if ($otp !== null && $otp !== '') {
+        $payload['otp'] = $otp;
+    }
+
+    $result = api_kuberone_request($config, 'POST', '/api/v1/public/website/partner-auth', $payload);
+    if (!$result['ok']) {
+        $msg = $result['body']['error']['message'] ?? $result['error'] ?? 'KuberOne login failed';
+        return [
+            'ok' => false,
+            'error' => is_string($msg) ? $msg : 'KuberOne login failed',
+        ];
+    }
+
+    $data = $result['body']['data'] ?? [];
+
     if ($mode === 'otp_request') {
-        $result = api_kuberone_request($config, 'POST', '/api/v1/auth/send-otp', [
-            'phone' => $digits,
-            'purpose' => 'LOGIN',
-        ]);
-        if (!$result['ok']) {
-            return [
-                'ok' => false,
-                'error' => $result['body']['error']['message'] ?? $result['error'] ?? 'Could not send OTP',
-            ];
-        }
         return [
             'ok' => true,
             'otp_sent' => true,
-            'message' => 'OTP sent via KuberOne. Use the code on your registered mobile.',
+            'message' => $data['message'] ?? 'OTP sent to your registered mobile number.',
+            'phone_hint' => $data['phone_hint'] ?? null,
         ];
     }
 
     if ($mode === 'otp') {
-        $result = api_kuberone_request($config, 'POST', '/api/v1/auth/login', [
-            'loginType' => 'partner',
-            'phone' => $digits,
-            'otp' => $otp,
-            'device' => [
-                'deviceId' => 'kuberfinserve-web',
-                'platform' => 'WEB',
-                'appVersion' => 'website',
-            ],
-        ]);
-        if (!$result['ok']) {
-            return [
-                'ok' => false,
-                'error' => $result['body']['error']['message'] ?? $result['error'] ?? 'OTP login failed',
-            ];
-        }
-
-        $data = $result['body']['data'] ?? [];
-        $accessToken = $data['accessToken'] ?? ($data['tokens']['accessToken'] ?? null);
+        $accessToken = $data['accessToken'] ?? ($data['token'] ?? null);
         if (!is_string($accessToken) || $accessToken === '') {
             return ['ok' => false, 'error' => 'KuberOne login did not return an access token'];
         }
 
-        $me = api_kuberone_request_auth_get($config, '/api/v1/auth/me', $accessToken);
-        $user = $me['body']['data'] ?? [];
+        $partner = $data['partner'] ?? [
+            'id' => 0,
+            'partner_id' => null,
+            'full_name' => 'Partner',
+            'email' => '',
+            'phone' => '',
+            'city' => null,
+            'state' => null,
+            'business_type' => null,
+            'status' => 'approved',
+            'created_at' => date('c'),
+        ];
 
         return [
             'ok' => true,
             'token' => $accessToken,
-            'partner' => [
-                'id' => 0,
-                'partner_id' => $user['partnerId'] ?? ($user['partnerCode'] ?? null),
-                'full_name' => $user['name'] ?? ($user['fullName'] ?? ($user['contactName'] ?? 'Partner')),
-                'email' => $user['email'] ?? '',
-                'phone' => $digits,
-                'city' => null,
-                'state' => null,
-                'business_type' => null,
-                'status' => 'approved',
-                'created_at' => date('c'),
-            ],
-            'must_change_password' => false,
+            'partner' => $partner,
+            'must_change_password' => (bool) ($data['must_change_password'] ?? false),
         ];
     }
 
     return ['ok' => false, 'error' => 'Unsupported mode'];
+}
+
+/**
+ * Sync website visitor interest capture to KuberOne.
+ *
+ * @return array{ok:bool, skipped?:bool, duplicate?:bool, status?:int, error?:string}
+ */
+function api_kuberone_sync_visitor(array $config, array $data): array
+{
+    if (!api_kuberone_enabled($config)) {
+        return ['ok' => true, 'skipped' => true];
+    }
+
+    $payload = [
+        'city' => $data['city'] ?? null,
+        'name' => $data['name'] ?? null,
+        'phone' => $data['phone'] ?? null,
+        'email' => $data['email'] ?? null,
+        'page_url' => $data['page_url'] ?? null,
+        'referrer' => $data['referrer'] ?? null,
+        'utm_source' => $data['utm_source'] ?? null,
+        'utm_medium' => $data['utm_medium'] ?? null,
+        'utm_campaign' => $data['utm_campaign'] ?? null,
+        'session_id' => $data['session_id'] ?? null,
+        'external_visitor_id' => $data['external_visitor_id'] ?? null,
+    ];
+
+    $result = api_kuberone_request($config, 'POST', '/api/v1/public/website/visitors', $payload);
+    if (!$result['ok']) {
+        $msg = $result['body']['error']['message'] ?? $result['error'] ?? ('HTTP ' . ($result['status'] ?? 0));
+        error_log('[kuberone-bridge] visitor sync failed: ' . (is_string($msg) ? $msg : 'failed'));
+        return [
+            'ok' => false,
+            'status' => $result['status'] ?? 0,
+            'error' => is_string($msg) ? $msg : 'KuberOne visitor sync failed',
+        ];
+    }
+
+    $duplicate = (bool) ($result['body']['data']['duplicate'] ?? false);
+    return ['ok' => true, 'status' => $result['status'] ?? 201, 'duplicate' => $duplicate];
 }

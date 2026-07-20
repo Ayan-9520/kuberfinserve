@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion'
-import { Smartphone } from 'lucide-react'
 import { SITE } from '@/data/site'
 import { MobileAppButtons } from '@/components/MobileAppButtons'
 import { PartnersSectionHeading } from '@/components/partners/PartnersSectionHeading'
+import { PlatformLogo } from '@/components/PlatformLogo'
 
 export function PartnerAppCta() {
   return (
@@ -19,14 +19,14 @@ export function PartnerAppCta() {
           viewport={{ once: true }}
           className="mx-auto mt-7 max-w-md"
         >
-          <div className="pf-form-card rounded-2xl p-6 text-center md:p-7">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--pf-primary)]/15 text-[var(--pf-primary)]">
-              <Smartphone className="h-6 w-6" />
+          <div className="pf-form-card rounded-2xl p-6 text-center md:p-8">
+            <div className="mx-auto flex w-fit flex-col items-center gap-2">
+              <PlatformLogo size="lg" showName nameBelow nameClassName="text-[var(--pf-text)] text-lg" />
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--pf-primary)]">
+                Partner App
+              </p>
             </div>
-            <p className="mt-4 font-heading text-base font-bold text-[var(--pf-text)]">
-              Partner App
-            </p>
-            <p className="mt-2 text-sm text-[var(--pf-text-secondary)]">
+            <p className="mt-5 text-sm text-[var(--pf-text-secondary)]">
               Open the app if installed, or download from Play Store / App Store.
             </p>
             <div className="mt-5">

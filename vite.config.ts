@@ -32,6 +32,10 @@ export default defineConfig({
         target: 'http://localhost:8787',
         changeOrigin: true,
       },
+      '/api/save-visitor.php': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+      },
       '/api/partner-login.php': {
         target: 'http://localhost:8787',
         changeOrigin: true,

@@ -66,7 +66,7 @@ function HeroSlideContent({ slide }: { slide: HeroSlide }) {
           <ArrowRight className="h-5 w-5" />
         </Link>
         <Link
-          to="/apply-loan"
+          to="/check-eligibility"
           className="inline-flex items-center gap-2 rounded-xl border-2 border-white/40 px-8 py-3.5 font-semibold text-white backdrop-blur-sm hover:bg-white/10"
         >
           Check Eligibility

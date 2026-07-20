@@ -78,8 +78,8 @@ export function SocialLinks({
           rel="noopener noreferrer"
           aria-label={label}
           className={cn(
-            'flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/80 transition-all duration-200',
-            'hover:border-brand-400/40 hover:bg-brand-500/15 hover:text-white hover:shadow-lg hover:shadow-brand-500/10',
+            'flex items-center justify-center rounded-xl border border-brand-100 bg-brand-50/50 text-brand-800 transition-all duration-200',
+            'hover:border-brand-300 hover:bg-brand-100 hover:text-brand-900 hover:shadow-md hover:shadow-brand-600/10',
             sizeMap[size],
             iconClassName,
           )}

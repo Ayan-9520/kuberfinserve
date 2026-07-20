@@ -170,8 +170,22 @@ function api_send_mail_smtp(string $to, string $subject, string $body, array $co
 
 function api_send_mail(string $to, string $subject, string $body, array $config, ?string $replyTo = null): bool
 {
+    $to = trim($to);
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+
     if (api_smtp_configured($config)) {
-        return api_send_mail_smtp($to, $subject, $body, $config, $replyTo);
+        $ok = api_send_mail_smtp($to, $subject, $body, $config, $replyTo);
+        if ($ok) {
+            return true;
+        }
+        // Retry once with SSL/465 (common Hostinger mailbox setup)
+        $retry = $config;
+        $retry['smtp_port'] = 465;
+        $retry['smtp_secure'] = 'ssl';
+        error_log('[mailer] TLS/587 failed — retrying SSL/465 for ' . $to);
+        return api_send_mail_smtp($to, $subject, $body, $retry, $replyTo);
     }
 
     $from = $config['from_email'] ?? 'noreply@kuberfinserve.com';
@@ -187,6 +201,43 @@ function api_send_mail(string $to, string $subject, string $body, array $config,
     return @mail($to, $subject, $body, $headers);
 }
 
+/** Parse comma/semicolon separated emails from config. */
+function api_notification_emails(array $config): array
+{
+    $raw = [];
+    foreach (['leads_email', 'site_email', 'admin_email'] as $key) {
+        if (!empty($config[$key]) && is_string($config[$key])) {
+            $raw[] = $config[$key];
+        }
+    }
+    $emails = [];
+    foreach ($raw as $chunk) {
+        foreach (preg_split('/[,;]+/', $chunk) ?: [] as $email) {
+            $email = strtolower(trim($email));
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $emails[$email] = true;
+            }
+        }
+    }
+
+    return array_keys($emails);
+}
+
+/** Send same mail to all admin/site notification addresses. */
+function api_send_mail_to_admins(string $subject, string $body, array $config, ?string $replyTo = null): array
+{
+    $recipients = api_notification_emails($config);
+    $results = [];
+    foreach ($recipients as $email) {
+        $results[$email] = api_send_mail($email, $subject, $body, $config, $replyTo);
+    }
+
+    return [
+        'sent' => in_array(true, $results, true),
+        'recipients' => $results,
+    ];
+}
+
 function api_build_admin_email_body(array $lead, array $config): string
 {
     $site = $config['site_name'] ?? 'KuberFinserve';
@@ -198,8 +249,6 @@ function api_build_admin_email_body(array $lead, array $config): string
         'Source: ' . ($lead['source'] ?? '—'),
         'CRM channel: ' . ($lead['crm_channel'] ?? 'website'),
         'Partner ID: ' . ($lead['partner_id'] ?? '—'),
-        'External lead ID: ' . ($lead['external_lead_id'] ?? '—'),
-        'Form variant: ' . ($lead['form_variant'] ?? '—'),
         'Submitted: ' . ($lead['created_at'] ?? date('Y-m-d H:i:s')),
         '',
         'Name: ' . ($lead['full_name'] ?? '—'),
@@ -208,29 +257,9 @@ function api_build_admin_email_body(array $lead, array $config): string
         'City: ' . ($lead['city'] ?? '—'),
         'Loan type: ' . ($lead['loan_type'] ?? '—'),
         'Loan amount: ' . ($lead['loan_amount'] ?? '—'),
-        'Tenure: ' . ($lead['tenure_months'] ?? '—'),
-        'Employment: ' . ($lead['employment_type'] ?? '—'),
-        'Monthly income: ' . ($lead['monthly_income'] ?? '—'),
-        'Company: ' . ($lead['company_name'] ?? '—'),
-        'Work experience: ' . ($lead['work_experience'] ?? '—'),
-        'Age: ' . ($lead['age'] ?? '—'),
-        'Purpose: ' . ($lead['purpose'] ?? '—'),
-        'Existing EMI: ' . ($lead['existing_emi'] ?? '—'),
-        'PAN: ' . ($lead['pan'] ?? '—'),
         'Message: ' . ($lead['message'] ?? '—'),
         'Page: ' . ($lead['page_url'] ?? '—'),
     ];
-
-    if (!empty($lead['extra_data'])) {
-        $extra = is_string($lead['extra_data']) ? json_decode($lead['extra_data'], true) : $lead['extra_data'];
-        if (is_array($extra) && $extra !== []) {
-            $lines[] = '';
-            $lines[] = 'Extra fields:';
-            foreach ($extra as $k => $v) {
-                $lines[] = "  {$k}: {$v}";
-            }
-        }
-    }
 
     return implode("\n", $lines);
 }
@@ -239,25 +268,19 @@ function api_build_user_confirmation_body(array $lead, array $config): string
 {
     $site = $config['site_name'] ?? 'KuberFinserve';
     $phone = $config['site_phone'] ?? '';
-    $name = $lead['full_name'] ?? 'Customer';
-    $loan = $lead['loan_type'] ?? 'your enquiry';
+    $name = trim((string) ($lead['full_name'] ?? '')) ?: 'Customer';
 
-    $body = "Dear {$name},\n\n";
-    $body .= "Thank you for contacting {$site}.\n\n";
-    $body .= "We have received your application for: {$loan}.\n";
-    $body .= "Our team will review your details and contact you within 24 working hours.\n\n";
-    $body .= "Summary:\n";
-    $body .= '- Phone: ' . ($lead['phone'] ?? '—') . "\n";
-    $body .= '- Email: ' . ($lead['email'] ?? '—') . "\n";
-    if (!empty($lead['loan_amount'])) {
-        $body .= '- Loan amount: ' . $lead['loan_amount'] . "\n";
+    $body = "Hi {$name},\n\n";
+    $body .= "Thanks for contacting {$site}. We received your request";
+    if (!empty($lead['loan_type'])) {
+        $body .= ' (' . $lead['loan_type'] . ')';
     }
-    $body .= "\n";
+    $body .= ".\n\n";
+    $body .= "Our team will call/message you shortly (usually within 24 working hours).\n\n";
     if ($phone !== '') {
-        $body .= "For urgent queries, call us at {$phone}.\n\n";
+        $body .= "Need help now? Call {$phone}\n\n";
     }
-    $body .= "Regards,\n{$site} Team\n";
-    $body .= ($config['leads_email'] ?? 'loanleads@kuberfinserve.com') . "\n";
+    $body .= "— {$site}\n";
 
     return $body;
 }
@@ -269,9 +292,9 @@ function api_send_user_confirmation(array $lead, array $config): bool
         return false;
     }
 
-    $leadsEmail = $config['leads_email'] ?? 'loanleads@kuberfinserve.com';
-    $userSubject = 'We received your application — ' . ($config['site_name'] ?? 'KuberFinserve');
+    $replyTo = api_notification_emails($config)[0] ?? ($config['leads_email'] ?? null);
+    $userSubject = 'We got your request — ' . ($config['site_name'] ?? 'KuberFinserve');
     $userBody = api_build_user_confirmation_body($lead, $config);
 
-    return api_send_mail($email, $userSubject, $userBody, $config, $leadsEmail);
+    return api_send_mail($email, $userSubject, $userBody, $config, is_string($replyTo) ? $replyTo : null);
 }

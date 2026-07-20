@@ -25,5 +25,8 @@ function api_db(array $config): PDO
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
 
+    // IST for NOW() / CURRENT_TIMESTAMP / created_at
+    $pdo->exec("SET time_zone = '+05:30'");
+
     return $pdo;
 }

@@ -104,7 +104,9 @@ async function submitWithFallback(
       if (!apiResult.emails?.admin && !emailResult.ok) {
         warning =
           warning ||
-          emailResult.error ||
+          (emailResult.error?.includes('SMTP')
+            ? 'Application saved. Email not sent — set correct smtp_pass in public_html/api/config.php (Hostinger mailbox password).'
+            : emailResult.error) ||
           'Application saved. Email not sent — configure SMTP in .env (local) or api/config.php (live).'
       }
     }
@@ -228,11 +230,11 @@ export interface PartnerApplyFormData {
 export async function submitPartnerApply(
   data: PartnerApplyFormData,
   source: string,
-): Promise<{ ok: boolean; error?: string; warning?: string }> {
+): Promise<{ ok: boolean; error?: string; warning?: string; id?: number }> {
   const partnerResult = await registerPartnerApplication(data, source)
 
   if (partnerResult.ok) {
-    return { ok: true, warning: partnerResult.warning }
+    return { ok: true, warning: partnerResult.warning, id: partnerResult.id }
   }
 
   // Fallback to generic lead pipeline if dedicated partner API unavailable

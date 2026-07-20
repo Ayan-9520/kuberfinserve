@@ -13,9 +13,10 @@ Website UI is unchanged. After a lead/partner is saved on Hostinger (MySQL + ema
 |--------|------|---------|
 | `POST` | `/api/v1/public/website/leads` | Website loan/contact lead → Admin Leads (`source=WEBSITE`) |
 | `POST` | `/api/v1/public/website/partners` | Become Partner → KuberOne partner `PENDING` |
+| `POST` | `/api/v1/public/website/partner-auth` | Partner Login OTP (mobile / email / Partner Code) |
+| `POST` | `/api/v1/public/website/visitors` | Visitor interest popup (city + optional contact) → `website_visitors` |
 | `GET` | `/api/v1/public/website/health` | Health check |
-| `POST` | `/api/v1/auth/send-otp` | Partner OTP (optional website login) |
-| `POST` | `/api/v1/auth/login` | `{ loginType: "partner", phone, otp }` |
+| `GET` | `/api/v1/leads/website-visitors` | Admin list (session + `leads.read`) |
 
 Header when configured: `X-Website-Api-Key: <WEBSITE_INTAKE_API_KEY>`
 
@@ -49,8 +50,34 @@ Copy from `public/api/config.example.php` and set:
 ```env
 KUBERONE_BRIDGE_ENABLED=true
 KUBERONE_API_BASE=http://127.0.0.1:4000
-KUBERONE_API_KEY=
+KUBERONE_API_KEY=kuber-website-intake-local-key
+KUBERONE_PARTNER_AUTH_ENABLED=true
 ```
+
+Must match `WEBSITE_INTAKE_API_KEY` on KuberOne (`apps/backend/.env`).
+
+**Partner login (after Admin Approve → ACTIVE):**
+- Website `/partner-login` or Partner App `:8082` — mobile / email / Partner Code → OTP on registered mobile (dev OTP `123456`).
+
+**Restart both** after env change:
+1. KuberOne API (`:4000`)
+2. Website `npm run dev` (reloads `server/lead-api.mjs`)
+
+Then submit any loan form → Admin **Leads** → filter source **Website**.
+
+## Quick verify
+
+```bash
+# Health
+curl http://127.0.0.1:4000/api/v1/public/website/health
+
+# Via website lead API (dev)
+curl -X POST http://127.0.0.1:8787/api/save-lead.php \
+  -H "Content-Type: application/json" \
+  -d "{\"form_type\":\"Lead\",\"source\":\"test\",\"fields\":{\"full_name\":\"Test User\",\"phone\":\"9876543210\",\"email\":\"t@example.com\",\"loan_type\":\"Personal Loan\",\"loan_amount\":\"500000\"}}"
+```
+
+Response should include `"kuberone":{"synced":true,"lead_number":"KFL-…"}`.
 
 ## Dual-write behavior (industry)
 
@@ -59,13 +86,25 @@ KUBERONE_API_KEY=
 3. If KuberOne fails, website still returns **success** to the user; error is logged / returned under `kuberone.error` for ops.
 4. Admin panel shows the lead under **Leads** with source **Website**.
 
-## Partner flow
+## Partner flow (Become Partner)
 
-1. **Become Partner** → Hostinger `partners` pending + KuberOne `POST /public/website/partners` (DSA pending).
-2. Approve in **KuberOne Admin** (and Hostinger admin if you still use it).
-3. **Partner Login**:
-   - Password: Hostinger (unchanged).
-   - OTP with mobile + `kuberone_partner_auth_enabled`: KuberOne auth (same as DSA app; dev OTP `123456`).
+1. Open `http://localhost:5175/become-partner`
+2. Fill **Partner Registration** (Contact → Location → Business) and submit
+3. Website saves locally **and** dual-writes to KuberOne
+4. Open **Admin → Partners**
+5. Find the new row — status **PENDING**, type DSA, code like `DSA-XXXXXX`
+
+Quick API check:
+
+```bash
+curl -X POST http://127.0.0.1:8787/api/save-partner.php \
+  -H "Content-Type: application/json" \
+  -d "{\"source\":\"test\",\"fields\":{\"name\":\"Test Partner\",\"phone\":\"9876501234\",\"email\":\"p@example.com\",\"city\":\"Delhi\",\"state\":\"Delhi\",\"business_type\":\"Loan Consultant\"}}"
+```
+
+Expect: `"kuberone":{"synced":true,"partner_code":"DSA-…"}`
+
+Admin login: `admin@kuberone.com` / `Admin@123`
 
 ## Hostinger deploy (upload these)
 

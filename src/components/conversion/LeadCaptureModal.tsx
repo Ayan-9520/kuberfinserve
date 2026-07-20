@@ -4,13 +4,18 @@ import { X } from 'lucide-react'
 import { ContactForm } from '@/components/ContactForm'
 
 const STORAGE_KEY = 'kf_lead_modal_shown'
+const VISITOR_SESSION_KEY = 'kf_visitor_interest_session'
 
 export function LeadCaptureModal() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (sessionStorage.getItem(STORAGE_KEY)) return
+    // Avoid stacking with visitor interest popup in the same session
+    const visitorState = sessionStorage.getItem(VISITOR_SESSION_KEY)
+    if (visitorState === 'open' || visitorState === 'closed') return
     const t = window.setTimeout(() => {
+      if (sessionStorage.getItem(VISITOR_SESSION_KEY)) return
       setOpen(true)
       sessionStorage.setItem(STORAGE_KEY, '1')
     }, 45000)

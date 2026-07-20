@@ -17,6 +17,7 @@ export type ProductKey =
   | 'lap'
   | 'personal-loan'
   | 'business-loan'
+  | 'working-capital'
   | 'car-loan'
   | 'education-loan'
   | 'machinery-loan'
@@ -128,7 +129,8 @@ function detectProduct(q: string): ProductKey {
   if (/home|house|housing/.test(q) && !/against|lap/.test(q)) return 'home-loan'
   if (/lap|loan against|mortgage|property loan/.test(q)) return 'lap'
   if (/personal/.test(q)) return 'personal-loan'
-  if (/business|sme|working capital|od|cc|overdraft|cash credit/.test(q)) return 'business-loan'
+  if (/working capital|overdraft|cash credit|od limit/.test(q)) return 'working-capital'
+  if (/business|sme/.test(q)) return 'business-loan'
   if (/car|auto|vehicle/.test(q)) return 'car-loan'
   if (/education|study|college|student/.test(q)) return 'education-loan'
   if (/machinery|equipment/.test(q)) return 'machinery-loan'
@@ -144,6 +146,7 @@ function productOptionsLinks(): ChatLink[] {
     { label: 'Loan Against Property', path: 'payload:lap' },
     { label: 'Personal Loan', path: 'payload:personal loan' },
     { label: 'Business Loan', path: 'payload:business loan' },
+    { label: 'Working Capital', path: 'payload:working capital' },
     { label: 'Education Loan', path: 'payload:education loan' },
     { label: 'Car Loan', path: 'payload:car loan' },
     { label: 'Machinery Loan', path: 'payload:machinery loan' },
@@ -162,6 +165,8 @@ function productLabel(key: ProductKey): string {
       return 'Personal Loan'
     case 'business-loan':
       return 'Business Loan'
+    case 'working-capital':
+      return 'Working Capital'
     case 'car-loan':
       return 'Auto Loan (New Car)'
     case 'education-loan':
@@ -404,7 +409,10 @@ function match(input: string, prevState: BotState): { reply: BotReply; nextState
             'General eligibility: age 21–65, stable income, CIBIL 650+ preferred. Exact eligibility depends on product & lender—share city + employment type for better guidance.',
             'General eligibility: age 21–65, stable income, CIBIL 650+ preferred. Exact eligibility product/lender par depend—city + employment type bata do.',
           ),
-          links: [{ label: 'Check & Apply', path: '/apply-loan' }],
+          links: [
+            { label: 'Check Eligibility', path: '/check-eligibility' },
+            { label: 'Check & Apply', path: '/apply-loan' },
+          ],
         },
         nextState,
       }
@@ -459,13 +467,27 @@ function match(input: string, prevState: BotState): { reply: BotReply; nextState
     }
   }
 
-  if (/business|sme|working capital/.test(q)) {
+  if (/working capital|overdraft|cash credit|od limit/.test(q)) {
     return {
       reply: {
         text: t(
           lang,
-          'Business loans for SMEs — working capital & term loans from 11% p.a.*',
-          'SME/business loans—working capital aur term loans 11% p.a.* se start ho sakte hain.',
+          'Working capital limits for inventory, vendors & daily operations from 11% p.a.*',
+          'Working capital limits inventory, vendors aur daily ops ke liye—11% p.a.* se start.',
+        ),
+        links: [{ label: 'Apply Working Capital', path: '/loans/working-capital' }],
+      },
+      nextState: { ...nextState, product: 'working-capital' },
+    }
+  }
+
+  if (/business|sme/.test(q)) {
+    return {
+      reply: {
+        text: t(
+          lang,
+          'Business loans for SMEs — expansion & term funding from 11% p.a.*',
+          'SME business loans—expansion aur term funding 11% p.a.* se start ho sakte hain.',
         ),
         links: [{ label: 'Apply Business Loan', path: '/loans/business-loan' }],
       },
@@ -610,7 +632,10 @@ function match(input: string, prevState: BotState): { reply: BotReply; nextState
             'General eligibility: age 21–65, stable income, CIBIL 650+ preferred. Exact eligibility depends on product & lender. Share city + employment type for better guidance.',
             'General eligibility: age 21–65, stable income, CIBIL 650+ preferred. Exact eligibility product/lender par depend. City + employment type bata do.',
           ),
-          links: [{ label: 'Check & Apply', path: '/apply-loan' }],
+          links: [
+            { label: 'Check Eligibility', path: '/check-eligibility' },
+            { label: 'Check & Apply', path: '/apply-loan' },
+          ],
         },
         nextState,
       }
@@ -625,6 +650,37 @@ function match(input: string, prevState: BotState): { reply: BotReply; nextState
         links: productOptionsLinks(),
       },
       nextState: { ...nextState, pending: 'ask_product_for_eligibility' },
+    }
+  }
+
+  if (/check eligibility|eligibility calculator|eligible hu|eligible ho/.test(q)) {
+    return {
+      reply: {
+        text: t(
+          lang,
+          'Use our free Check Eligibility tool for an instant indicative estimate based on income, CIBIL and existing EMIs. Not a loan approval.',
+          'Free Check Eligibility tool use karein — income, CIBIL aur existing EMI ke basis par indicative estimate. Loan approval nahi hai.',
+        ),
+        links: [{ label: 'Check Eligibility', path: '/check-eligibility' }],
+      },
+      nextState,
+    }
+  }
+
+  if (/cibil|credit score|credit report/.test(q)) {
+    return {
+      reply: {
+        text: t(
+          lang,
+          'We provide CIBIL / credit score assistance — score ranges, improvement tips and loan-ready guidance. Official scores come from authorised bureaus; we do not generate or guarantee scores.',
+          'Hum CIBIL / credit score assistance dete hain — score ranges, improvement tips aur loan-ready guidance. Official score authorised bureau se aata hai; hum score generate ya guarantee nahi karte.',
+        ),
+        links: [
+          { label: 'CIBIL Assistance', path: '/cibil' },
+          { label: 'Talk to Expert', path: '/contact-us' },
+        ],
+      },
+      nextState,
     }
   }
 

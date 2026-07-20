@@ -64,20 +64,20 @@ export const APPLY_SUCCESS_STORIES = [
 
 export const APPLY_FAQ = [
   {
-    q: 'How long does approval take?',
-    a: 'Most applications receive a callback within 24 hours. Sanction timelines are typically 48 hours to 7 days depending on loan type and documentation.',
+    q: 'Which products can I apply for here?',
+    a: 'Global Apply covers all loans (home, LAP, auto, personal, business, working capital, education, machinery), plus Credit Card, Insurance, and CIBIL assistance — select the product first, then fill your details.',
+  },
+  {
+    q: 'How long does the process take?',
+    a: 'Most applications receive a callback within 24 hours. Sanction or issuance timelines depend on the product and documentation. Final approval is at the lender / insurer discretion.',
   },
   {
     q: 'What documents are required?',
-    a: 'PAN, Aadhaar, income proof (salary slips or ITR), bank statements, and property papers for home/LAP. Our team shares an exact checklist for your profile.',
+    a: 'Typically PAN, Aadhaar, income proof (salary slips or ITR), and bank statements. Property papers for home/LAP; KYC for cards & insurance. Our team shares an exact checklist for your product.',
   },
   {
-    q: 'What is the minimum income?',
-    a: 'Requirements vary by lender. Salaried applicants often need ₹25,000+ monthly income; self-employed profiles are assessed on bank credits and ITR.',
-  },
-  {
-    q: 'Can self-employed apply?',
-    a: 'Yes. Business owners and professionals can apply with GST returns, ITR, and bank statements. We match NBFCs and banks suited to your profile.',
+    q: 'Can self-employed applicants apply?',
+    a: 'Yes. Business owners and professionals can apply with GST returns, ITR, and bank statements. We match partners suited to your profile. Subject to eligibility.',
   },
 ] as const
 

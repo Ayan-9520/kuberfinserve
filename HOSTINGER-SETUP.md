@@ -1,190 +1,200 @@
-# Hostinger Setup — Leads Database + Admin + Email
+# Hostinger Deploy Guide — KuberFinserve (ready to upload)
 
-Yeh guide **form submit → MySQL save → admin panel → user + admin email** ke liye hai.
-
----
-
-## Part 1 — Hostinger par database banana
-
-1. **hPanel** login → **Websites** → apni site select karo  
-2. **Databases** → **MySQL Databases**  
-3. **Create database**:
-   - Database name (note karo, e.g. `u123456789_kuber`)
-   - Username + strong password (note karo)
-   - User ko database par **All Privileges** do  
-4. **phpMyAdmin** kholo → left side apna database select karo  
-5. **SQL** tab → `database/schema.sql` file ka pura content paste karo → **Go**  
-   - Table `leads` ban jayegi  
-
-**Note:** Host par DB host aksar `localhost` hota hai (hPanel → database details me likha hota hai).
+Website forms → Hostinger MySQL + emails → optional KuberOne Admin CRM.
 
 ---
 
-## Part 2 — PHP config (secret file)
+## What works (connected)
 
-1. PC par project folder: `public/api/config.example.php`  
-2. Copy karke naam rakho: **`config.php`** (same folder `public/api/`)  
-3. Hostinger values bharo:
+| Flow | Saves to DB | Email admin | Email user | KuberOne CRM |
+|------|-------------|-------------|------------|--------------|
+| Loan / Contact / Apply / Chat leads | `leads` | Yes (SMTP) | Yes | Yes (if bridge on) |
+| Partner apply | `partners` | Yes | Yes | Yes (PENDING) |
+| Visitor city popup | `website_visitors` | No | No | Yes (Website Visitors) |
+| Partner Login OTP | — | — | OTP via KuberOne | Prefer KuberOne ACTIVE |
 
-```php
-'db_host' => 'localhost',
-'db_name' => 'u123456789_kuber',      // apna DB name
-'db_user' => 'u123456789_user',       // apna DB user
-'db_pass' => 'YOUR_PASSWORD',
-
-'admin_username' => 'admin',
-'admin_password' => 'Apna-Mazboot-Password-123!',
-
-'leads_email' => 'loanleads@kuberfinserve.com',
-'from_email' => 'noreply@kuberfinserve.com',
-```
-
-4. **`config.php` GitHub par upload mat karo** — sirf server par rakho.
+Visitor popup: **har page open / reload** pe ~3s baad aata hai (submit ke baad usi tab session me dubara nahi). Force: `?visitor=1`
 
 ---
 
-## Part 3 — Frontend build + upload
+## Step 1 — Database (phpMyAdmin)
 
-### Local PC par:
+1. hPanel → **Databases** → MySQL → create DB + user (All Privileges)
+2. phpMyAdmin → select DB → **SQL** tab
+3. Run **`database/schema.sql`** (creates `leads`, `partners`, `partner_audit_log`, `website_visitors`)
+
+**Agar purani DB pehle se hai** (tables already exist), separately run:
+- `database/leads_crm_migration.sql` (if needed)
+- `database/partners_migration.sql` (if needed)
+- `database/website_visitors_migration.sql` (**required** for visitor popup)
+
+Confirm tables: `leads`, `partners`, `partner_audit_log`, `website_visitors`
+
+---
+
+## Step 2 — Local build
+
+PC pe `kuberfinserve` folder:
 
 ```bash
 npm install
 npm run build
 ```
 
-`dist` folder banega.
+`dist/` folder banega. Vite `public/` (api, logos, .htaccess) ko `dist/` me copy karta hai.
 
-### Hostinger File Manager / FTP:
+---
 
-`public_html` (ya subdomain folder) me upload karo:
+## Step 3 — Upload to Hostinger (`public_html`)
 
-| Upload kya | Kahan |
-|------------|--------|
-| `dist` ke **andar ki saari files** (index.html, assets/, …) | `public_html/` **root** |
-| `public/api/` folder (save-lead.php, admin/, …) | `public_html/api/` |
-| `public/api/config.php` (jo aapne banayi) | `public_html/api/config.php` |
-| `public/.htaccess` | `public_html/.htaccess` |
-
-**Structure example:**
+`dist/` ke **andar ki saari files** upload karo → `public_html/` root:
 
 ```
 public_html/
   index.html
-  assets/
-  .htaccess
+  assets/                 ← JS/CSS build
+  .htaccess               ← SPA routing (api/ rewrite nahi hota)
+  kuberone-logo.png
+  logo.png
   api/
-    config.php          ← secret
-    save-lead.php
+    config.php            ← YOU CREATE (see Step 4) — never commit
+    config.example.php
+    .htaccess
     bootstrap.php
     db.php
     mailer.php
+    lead_service.php
+    save-lead.php
+    save-partner.php
+    save-visitor.php      ← visitor popup
+    partner-login.php
+    partner_notify.php
+    partner_helpers.php
+    kuberone_bridge.php
+    jwt.php
+    ping.php
+    send-lead.php
     admin/
       index.php
       export.php
-  send-lead.php         (optional old file)
-  images/
+      partners.php
+      bootstrap.php
+    mobile/
+      save-lead.php
 ```
 
----
-
-## Part 4 — Test karna (zaroori)
-
-### Step A — Database test (browser)
-1. Browser me kholo: **`https://kuberfinserve.com/api/ping.php`**  
-2. Agar sahi hai to dikhega:
-   ```json
-   {"ok":true,"message":"Database connected successfully","leads_count":0,...}
-   ```
-3. Agar error aaye → `config.php` me DB name/user/password dubara check karo (hPanel → Databases)
-
-### Step B — Form test
-1. Website par **Apply Loan** form submit karo (10-digit mobile, valid email)  
-2. Browser **F12 → Network** → `save-lead.php` → Response me `"ok":true,"id":123`  
-3. **phpMyAdmin** → `u772348073_kuber` → table `leads` → **Browse** → nayi row  
-4. **loanleads@kuberfinserve.com** par admin email  
-5. Customer ke email par confirmation (spam folder bhi check karo)  
-6. Admin panel: **`https://kuberfinserve.com/api/admin/`**
-
-### Agar email aa rahi hai par DB khali hai
-- Pehle `save-lead.php` file ke **shuru me space/BOM na ho** — line 1 sirf `<?php` honi chahiye  
-- Purani file replace karo: `public/api/save-lead.php` → Hostinger `public_html/api/save-lead.php`  
-- Phir `ping.php` test karo, phir form submit
-
-Agar error aaye:
-- `api/config.php` missing / galat DB password  
-- Table `leads` create nahi hui (`database/schema.sql` run karo)  
-- PHP version 8.0+ (Hostinger default OK)
+**Important files list (must exist under `public_html/api/`):**  
+`save-lead.php`, `save-partner.php`, `save-visitor.php`, `partner-login.php`, `kuberone_bridge.php`, `lead_service.php`, `mailer.php`, `partner_notify.php`, `db.php`, `bootstrap.php`, `jwt.php`, `ping.php`, `admin/*`
 
 ---
 
-## Part 5 — Kya save hota hai
+## Step 4 — `api/config.php` (server only)
 
-Har form submit par `leads` table me:
+1. Copy `api/config.example.php` → **`api/config.php`**
+2. Fill Hostinger values:
 
-- Name, phone, email, city  
-- Loan type / product  
-- Income, employment, amount, tenure, PAN, message (loan form)  
-- Form type (Loan Application / Contact Enquiry)  
-- Source (kaunsi page)  
-- IP, date/time  
+```php
+'db_host' => 'localhost',
+'db_name' => 'uXXXX_yourdb',
+'db_user' => 'uXXXX_user',
+'db_pass' => 'YOUR_DB_PASSWORD',
+
+'admin_username' => 'admin',
+'admin_password' => 'Strong-Password-Here!',
+
+'leads_email' => 'loanleads@kuberfinserve.com',
+'site_email' => 'info@kuberfinserve.com',
+'from_email' => 'loanleads@kuberfinserve.com',
+
+'smtp_host' => 'smtp.hostinger.com',
+'smtp_port' => 587,
+'smtp_secure' => 'tls',
+'smtp_user' => 'loanleads@kuberfinserve.com',
+'smtp_pass' => 'YOUR_EMAIL_PASSWORD',
+
+'jwt_secret' => 'long-random-64-char-secret',
+'mobile_api_key' => 'random-mobile-key',
+
+// KuberOne dual-write (production API URL — NOT localhost)
+'kuberone_bridge_enabled' => true,
+'kuberone_api_base' => 'https://api.YOUR-KUBERONE-DOMAIN.com',
+'kuberone_api_key' => 'SAME_AS_WEBSITE_INTAKE_API_KEY',
+'kuberone_partner_auth_enabled' => true,
+```
+
+`config.php` Git me mat daalo — sirf server pe rakho.
+
+**Keys must match:**
+
+| Hostinger `config.php` | KuberOne backend `.env` |
+|------------------------|-------------------------|
+| `kuberone_api_key` | `WEBSITE_INTAKE_API_KEY` |
+| `kuberone_api_base` | Public API base URL (HTTPS) |
 
 ---
 
-## Part 6 — Admin panel
+## Step 5 — KuberOne (CRM) side
 
-| URL | Kaam |
-|-----|------|
-| `/api/admin/` | Login → saari leads list |
-| Search box | Name / phone / email / loan |
-| Status dropdown | new → contacted → closed |
-| Export CSV | Download all leads |
+On KuberOne backend `.env`:
 
-Password change: `api/config.php` me `admin_password` edit karo.
+```env
+WEBSITE_INTAKE_API_KEY=SAME_AS_config.php_kuberone_api_key
+CORS_ORIGINS=https://kuberfinserve.com,https://www.kuberfinserve.com
+```
 
----
+- Run website_visitors Prisma migration (Admin Visitors page)
+- Restart API after env change
+- Health: `GET /api/v1/public/website/health` with API key header
 
-## Part 7 — Email issues (Hostinger)
-
-- `mail()` kabhi **spam** me jata hai — inbox + spam check karo  
-- `from_email` domain wala hona chahiye: `noreply@kuberfinserve.com`  
-- Hostinger → **Emails** → domain email banao agar `mail()` fail ho  
-- Backup: `.env` me `VITE_WEB3FORMS_ACCESS_KEY` (agar PHP fail ho to email fallback)
+Partner OTP: approve partner in **KuberOne Admin** (ACTIVE). Hostinger password login alag path hai.
 
 ---
 
-## Part 8 — Local development
+## Step 6 — Smoke tests (deploy ke baad)
 
-Local par PHP/MySQL nahi hai to form **Web3Forms** (agar key ho) ya error dikh sakta hai.
+| # | Test | Expected |
+|---|------|----------|
+| 1 | `https://yoursite.com/api/ping.php` | `"ok":true` + DB + `smtp_configured` |
+| 2 | `https://yoursite.com/api/smtp-test.php` | test mail in leads inbox |
+| 3 | `https://yoursite.com/api/bridge-test.php` | `"ok":true` (KuberOne reachable) |
+| 4 | Open homepage → ~3s visitor popup → city submit | phpMyAdmin `website_visitors` + Admin Visitors |
+| 5 | Apply Loan / Contact form | `leads` row + admin email + user email + Admin Leads |
+| 6 | Become Partner form | `partners` PENDING + emails + KuberOne partner |
+| 7 | F12 → Network `save-lead.php` | `"ok":true` + `"kuberone":{"synced":true}` |
 
-Live test ke liye:
-- Site Hostinger par upload karo, ya  
-- `.env` me: `VITE_LEAD_API_URL=https://kuberfinserve.com`
+Full key map + upload list: see **`FULL-FLOW-SETUP.md`**.
+
+Local force visitor: `http://localhost:5175/?visitor=1`
+
+---
+
+## Email notes
+
+- Hostinger mailbox SMTP use karo (`smtp.hostinger.com`) — PHP `mail()` Gmail pe fail ho sakta hai
+- Admin = `leads_email`
+- User confirmation = form wala email
+- Visitor popup email nahi bhejta (by design)
+
+Details: `SETUP-EMAIL.md`
+
+---
+
+## Common mistakes
+
+1. `docker compose` **kuberfinserve** me mat chalao — Docker sirf `kuberapp` me hai  
+2. `kuberone_api_base` localhost mat chhodo production pe  
+3. Sirf `schema.sql` purani DB pe skip → visitors migration alag se chalao  
+4. `config.php` upload bhoolna → forms 500  
+5. Build ke bina sirf source upload → site tootegi; hamesha `npm run build` → `dist/` upload
 
 ---
 
 ## Quick checklist
 
-- [ ] MySQL database + user created  
-- [ ] `schema.sql` run in phpMyAdmin  
-- [ ] `api/config.php` uploaded with correct credentials  
-- [ ] `npm run build` → `dist` uploaded to `public_html`  
-- [ ] `api/` folder uploaded  
-- [ ] `.htaccess` uploaded  
-- [ ] Form test → row in phpMyAdmin  
-- [ ] Admin login works  
-- [ ] Emails received (user + admin)
-
----
-
-## Files reference (project me)
-
-| File | Purpose |
-|------|---------|
-| `database/schema.sql` | Table create SQL |
-| `public/api/save-lead.php` | Form API — DB + emails |
-| `public/api/config.example.php` | Config template |
-| `public/api/admin/index.php` | Admin UI |
-| `src/utils/submitLeadApi.ts` | Frontend → PHP call |
-| `src/utils/leads.ts` | Loan + contact submit |
-
-Support: agar deploy ke baad error ho, browser **Network** tab me `save-lead.php` response dekho — wahan exact error JSON me aata hai.
+- [ ] MySQL: `schema.sql` (or migrations)  
+- [ ] `npm run build`  
+- [ ] Upload `dist/*` → `public_html/`  
+- [ ] `api/config.php` filled  
+- [ ] SMTP works  
+- [ ] KuberOne key + CORS  
+- [ ] ping + lead + visitor + partner tested  

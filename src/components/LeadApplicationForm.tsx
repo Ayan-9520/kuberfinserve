@@ -6,9 +6,9 @@ import { CityInput } from '@/components/ui/CityInput'
 import { useToast } from '@/components/ui/Toast'
 import {
   EMPLOYMENT_TYPES_LEAD,
-  INCOME_RANGES,
   TENURE_OPTIONS,
   LOAN_TYPE_OPTIONS,
+  isNonLoanProduct,
 } from '@/data/forms'
 import { WORK_EXPERIENCE_OPTIONS } from '@/data/applyLoanPage'
 import { SITE } from '@/data/site'
@@ -66,20 +66,20 @@ function FormSection({
   return (
     <fieldset
       className={cn(
-        'rounded-lg border border-gray-200 bg-gray-50/50',
-        compact ? 'p-3' : 'p-4 md:p-5',
+        'rounded-2xl border border-brand-100/80 bg-gradient-to-br from-white to-brand-50/30 shadow-sm',
+        compact ? 'p-3.5' : 'p-4 md:p-5',
       )}
     >
       <legend
         className={cn(
-          'px-1 font-heading font-bold text-navy-900',
+          'px-1.5 font-heading font-bold text-navy-900',
           compact ? 'text-xs' : 'text-sm md:text-base',
         )}
       >
         {title}
       </legend>
       {description && (
-        <p className={cn('text-gray-500', compact ? 'mb-2 mt-0.5 text-[11px]' : 'mb-4 mt-1 text-xs')}>
+        <p className={cn('text-gray-500', compact ? 'mb-2.5 mt-0.5 text-[11px]' : 'mb-4 mt-1 text-xs')}>
           {description}
         </p>
       )}
@@ -140,7 +140,7 @@ export function LeadApplicationForm({
   defaultLoanType = '',
   source = 'website',
   compact = false,
-  twoColumn = false,
+  twoColumn: _twoColumn = false,
   applyPage = false,
   applicationForm = false,
   title,
@@ -150,6 +150,7 @@ export function LeadApplicationForm({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitWarning, setSubmitWarning] = useState<string | null>(null)
   const [submitOk, setSubmitOk] = useState(false)
+  const [submittedLeadId, setSubmittedLeadId] = useState<string | null>(null)
   const { showSuccess, showError } = useToast()
 
   useEffect(() => {
@@ -160,6 +161,9 @@ export function LeadApplicationForm({
     register,
     handleSubmit,
     reset,
+    watch,
+    unregister,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<LeadApplicationData>({
     defaultValues: {
@@ -170,6 +174,15 @@ export function LeadApplicationForm({
       message: '',
     },
   })
+
+  const selectedProduct = watch('loanType')
+  const hideLoanFields = isNonLoanProduct(selectedProduct || '')
+
+  useEffect(() => {
+    if (!hideLoanFields) return
+    unregister(['loanAmount', 'tenureMonths'])
+    clearErrors(['loanAmount', 'tenureMonths'])
+  }, [hideLoanFields, unregister, clearErrors])
 
   const onSubmit = async (data: LeadApplicationData) => {
     if (data._gotcha) return
@@ -184,8 +197,13 @@ export function LeadApplicationForm({
       return
     }
     setSubmitWarning(result.warning ?? null)
+    setSubmittedLeadId(result.leadId ?? null)
     setSubmitOk(true)
-    showSuccess('Application submitted. Our team will contact you shortly.')
+    showSuccess(
+      result.leadId
+        ? `Application submitted successfully. Reference: ${result.leadId}`
+        : 'Application submitted successfully. Our team will contact you shortly.',
+    )
     reset({
       loanType: defaultLoanType,
       agreeTerms: false,
@@ -207,6 +225,11 @@ export function LeadApplicationForm({
   const span2 = 'sm:col-span-2'
 
   if (submitOk) {
+    const waText = encodeURIComponent(
+      submittedLeadId
+        ? `Hi KuberFinserve, I submitted application ${submittedLeadId}. Please assist.`
+        : 'Hi KuberFinserve, I just submitted an application. Please assist.',
+    )
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
@@ -214,13 +237,38 @@ export function LeadApplicationForm({
         className={cn('rounded-2xl border border-green-200 bg-green-50 p-6 text-center', className)}
       >
         <ShieldCheck className="mx-auto h-10 w-10 text-brand-600" />
-        <p className="mt-3 font-heading font-bold text-brand-900">Thank you!</p>
+        <p className="mt-3 font-heading font-bold text-brand-900">Application submitted</p>
         <p className="mt-1 text-sm text-gray-600">
-          Application saved. Our team will call you within 24 hours.
+          Thank you. Our team will call you within 24 working hours.
         </p>
+        {submittedLeadId && (
+          <p className="mt-3 rounded-lg border border-brand-100 bg-white px-3 py-2 text-sm font-semibold text-navy-900">
+            Reference: <span className="text-brand-700">{submittedLeadId}</span>
+          </p>
+        )}
         {submitWarning && (
           <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">{submitWarning}</p>
         )}
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <a
+            href={`https://wa.me/${SITE.whatsapp.replace(/\D/g, '')}?text=${waText}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700"
+          >
+            WhatsApp us
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              setSubmitOk(false)
+              setSubmittedLeadId(null)
+            }}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-navy-700 hover:bg-slate-50"
+          >
+            Submit another
+          </button>
+        </div>
       </motion.div>
     )
   }
@@ -231,20 +279,79 @@ export function LeadApplicationForm({
       <form
         onSubmit={handleSubmit(onSubmit)}
         className={cn(
-          'rounded-2xl border border-slate-200 bg-white shadow-[0_12px_40px_rgb(15_23_42/0.08)]',
+          'overflow-hidden rounded-3xl border border-brand-100 bg-white shadow-[0_20px_60px_rgb(15_41_32/0.1)] ring-1 ring-brand-100/50',
           className,
         )}
         noValidate
       >
-        <div className="border-b border-gray-200 bg-brand-50/60 px-4 py-3 md:px-6">
-          <h2 className="font-heading text-lg font-bold text-navy-900">
-            {title ?? 'Loan Application Form'}
+        <div className="border-b border-brand-100 bg-gradient-to-r from-brand-50 via-white to-emerald-50/80 px-5 py-4 md:px-6">
+          <h2 className="font-heading text-lg font-bold text-navy-900 md:text-xl">
+            {title ?? 'Global Apply'}
           </h2>
-          <p className="mt-0.5 text-xs text-gray-600">All fields marked * are mandatory</p>
+          <p className="mt-0.5 text-xs text-slate-600">
+            Select product first — then complete your details. Fields marked * are mandatory.
+          </p>
         </div>
 
-        <div className="space-y-3 px-4 py-4 md:px-6">
-          <FormSection title="1. Personal Details" compact>
+        <div className="space-y-4 px-4 py-5 md:px-6">
+          {/* 1. Product first */}
+          <FormSection title="1. Select Product *" description="Loans, credit card, insurance & CIBIL" compact>
+            <FormField label="Product Type *" error={errors.loanType?.message} className={span2} compact>
+              <select
+                {...register('loanType', { required: 'Select a product' })}
+                className={cn(inputClass, errors.loanType && 'border-red-500')}
+              >
+                <option value="">— Select product —</option>
+                {LOAN_TYPE_OPTIONS.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            {!hideLoanFields && (
+              <>
+                <FormField label="Amount Required (₹) *" error={errors.loanAmount?.message} compact>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    {...register('loanAmount', {
+                      required: hideLoanFields ? false : 'Amount is required',
+                      pattern: { value: /^[1-9]\d{3,}$/, message: 'Minimum amount is ₹10,000' },
+                      validate: (v) =>
+                        hideLoanFields || Number(v) >= 10000 || 'Minimum amount is ₹10,000',
+                    })}
+                    className={cn(inputClass, errors.loanAmount && 'border-red-500')}
+                    placeholder="e.g. 2500000"
+                    autoComplete="off"
+                  />
+                </FormField>
+                <FormField label="Preferred Tenure *" error={errors.tenureMonths?.message} compact>
+                  <select
+                    {...register('tenureMonths', {
+                      required: hideLoanFields ? false : 'Select tenure',
+                    })}
+                    className={cn(inputClass, errors.tenureMonths && 'border-red-500')}
+                  >
+                    <option value="">— Select tenure —</option>
+                    {TENURE_OPTIONS.map((t) => (
+                      <option key={t.months} value={String(t.months)}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
+              </>
+            )}
+            {hideLoanFields && selectedProduct && (
+              <p className="sm:col-span-2 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-800">
+                You selected <strong>{selectedProduct}</strong> — amount & tenure not required. Our
+                advisor will guide next steps.
+              </p>
+            )}
+          </FormSection>
+
+          <FormSection title="2. Personal Details" compact>
             <FormField label="Full Name *" error={errors.fullName?.message} className={span2} compact>
               <input
                 {...register('fullName', {
@@ -294,7 +401,7 @@ export function LeadApplicationForm({
             </FormField>
           </FormSection>
 
-          <FormSection title="2. Employment Details" compact>
+          <FormSection title="3. Employment Details" compact>
             <FormField label="Employment Type *" error={errors.employmentType?.message} compact>
               <select
                 {...register('employmentType', { required: 'Select employment type' })}
@@ -308,18 +415,18 @@ export function LeadApplicationForm({
                 ))}
               </select>
             </FormField>
-            <FormField label="Monthly Income *" error={errors.monthlyIncome?.message} compact>
-              <select
-                {...register('monthlyIncome', { required: 'Select income range' })}
+            <FormField label="Monthly Income (₹) *" error={errors.monthlyIncome?.message} compact>
+              <input
+                type="text"
+                inputMode="numeric"
+                {...register('monthlyIncome', {
+                  required: 'Enter monthly income',
+                  pattern: { value: /^[1-9]\d*$/, message: 'Enter a valid amount' },
+                })}
                 className={cn(inputClass, errors.monthlyIncome && 'border-red-500')}
-              >
-                <option value="">— Select —</option>
-                {INCOME_RANGES.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
+                placeholder="e.g. 75000"
+                autoComplete="off"
+              />
             </FormField>
             <FormField label="Company / Business Name *" error={errors.companyName?.message} compact>
               <input
@@ -343,50 +450,7 @@ export function LeadApplicationForm({
             </FormField>
           </FormSection>
 
-          <FormSection title="3. Loan Details" compact>
-            <FormField label="Loan Type *" error={errors.loanType?.message} className={span2} compact>
-              <select
-                {...register('loanType', { required: 'Select loan type' })}
-                className={cn(inputClass, errors.loanType && 'border-red-500')}
-              >
-                <option value="">— Select loan type —</option>
-                {LOAN_TYPE_OPTIONS.filter((t) => t !== 'Insurance' && t !== 'Credit Card').map(
-                  (t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ),
-                )}
-              </select>
-            </FormField>
-            <FormField label="Loan Amount Required (₹) *" error={errors.loanAmount?.message} compact>
-              <input
-                type="number"
-                {...register('loanAmount', {
-                  required: 'Loan amount is required',
-                  min: { value: 10000, message: 'Minimum amount is ₹10,000' },
-                })}
-                className={cn(inputClass, errors.loanAmount && 'border-red-500')}
-                placeholder="e.g. 2500000"
-                min={10000}
-              />
-            </FormField>
-            <FormField label="Preferred Tenure *" error={errors.tenureMonths?.message} compact>
-              <select
-                {...register('tenureMonths', { required: 'Select tenure' })}
-                className={cn(inputClass, errors.tenureMonths && 'border-red-500')}
-              >
-                <option value="">— Select tenure —</option>
-                {TENURE_OPTIONS.map((t) => (
-                  <option key={t.months} value={String(t.months)}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-          </FormSection>
-
-          <div className="rounded-lg border border-gray-200 bg-white p-3">
+          <div className="rounded-xl border border-brand-100 bg-brand-50/40 p-3.5">
             <label className="flex items-start gap-2 text-xs text-gray-700">
               <input
                 type="checkbox"
@@ -394,11 +458,11 @@ export function LeadApplicationForm({
                 className="mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-brand-700"
               />
               <span>
-                I authorize {SITE.name} to contact me regarding my loan application. I accept the{' '}
+                I authorize {SITE.name} to contact me regarding my application. I accept the{' '}
                 <a href="/privacy-policy" className="font-medium text-brand-700 underline">
                   Privacy Policy
                 </a>
-                . *
+                . Final approval is at the lender / insurer discretion. *
               </span>
             </label>
             {errors.agreeTerms && (
@@ -422,18 +486,18 @@ export function LeadApplicationForm({
             </p>
           )}
 
-          <div className="flex flex-col gap-2 border-t border-gray-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-brand-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-[11px] text-gray-500">
-              <ShieldCheck className="mr-1 inline h-3 w-3 text-brand-600" />
-              Confidential &amp; secure
+              <ShieldCheck className="mr-1 inline h-3.5 w-3.5 text-brand-600" />
+              Confidential · RBI-compliant partners · No approval guarantee
             </p>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex min-w-[10rem] items-center justify-center gap-2 rounded-md bg-brand-800 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-900 disabled:opacity-70"
+              className="inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-700 to-brand-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-brand-600/20 hover:brightness-105 disabled:opacity-70"
             >
               <Send className="h-4 w-4" />
-              {isSubmitting ? 'Submitting Application…' : 'Submit Application'}
+              {isSubmitting ? 'Submitting…' : 'Submit Application'}
             </button>
           </div>
         </div>
@@ -441,71 +505,104 @@ export function LeadApplicationForm({
     )
   }
 
-  /* ——— Compact: loan pages & apply-loan page ——— */
+  /* ——— Compact: loan / product sidebars (premium, no nested scroll) ——— */
   if (compact) {
-    const fieldWrap = cn(
-      twoColumn ? 'grid sm:grid-cols-2' : 'space-y-3',
-      applyPage ? 'flex-1 gap-4 md:gap-5' : twoColumn ? 'gap-3' : '',
+    const compactInput = cn(
+      inputClass,
+      'rounded-xl border-brand-100 px-3 py-2 text-sm shadow-sm',
     )
-    const spanFull = twoColumn ? 'sm:col-span-2' : ''
 
     return (
       <form
         onSubmit={handleSubmit(onSubmit)}
         className={cn(
-          'relative flex flex-col rounded-2xl border border-slate-200/80 bg-white shadow-[0_12px_40px_rgb(15_23_42/0.08)]',
-          applyPage ? 'min-h-[34rem] p-6 md:min-h-[36rem] md:p-8' : 'p-5 md:p-6',
+          'relative overflow-visible rounded-2xl border border-brand-100 bg-white shadow-[0_16px_48px_rgb(15_41_32/0.1)] ring-1 ring-brand-100/40',
           className,
         )}
         noValidate
       >
-        {!hideTitle && (
-          <p className="mb-4 font-heading text-lg font-bold text-navy-900 md:text-xl">
-            {title ?? 'Quick Apply'}
-          </p>
-        )}
+        <div className="border-b border-brand-100 bg-gradient-to-r from-brand-50 via-white to-emerald-50/80 px-4 py-3.5">
+          <div className="flex items-center justify-between gap-2">
+            {!hideTitle && (
+              <h2 className="font-heading text-base font-bold text-navy-900">
+                {title ?? 'Quick Apply'}
+              </h2>
+            )}
+            {defaultLoanType ? (
+              <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-[11px] font-semibold text-brand-800 ring-1 ring-brand-200">
+                {defaultLoanType}
+              </span>
+            ) : (
+              <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-[11px] font-semibold text-brand-800 ring-1 ring-brand-200">
+                24h callback
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-[11px] text-slate-500">Fill details — our advisor will call you.</p>
+        </div>
 
         {defaultLoanType && (
-          <>
-            <input type="hidden" {...register('loanType', { required: true })} />
-            <p className="mb-3 rounded-lg bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-800">
-              {defaultLoanType}
-            </p>
-          </>
+          <input type="hidden" {...register('loanType', { required: true })} />
         )}
 
-        <div className={fieldWrap}>
-          <div className={spanFull}>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 p-4">
+          {!defaultLoanType && (
+            <div className="col-span-2">
+              <Field label="Product *" error={errors.loanType?.message}>
+                <select
+                  {...register('loanType', { required: 'Required' })}
+                  className={cn(compactInput, errors.loanType && 'border-red-400')}
+                >
+                  <option value="">— Select product —</option>
+                  {LOAN_TYPE_OPTIONS.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+          )}
+
+          <div className="col-span-2">
             <Field label="Full Name *" error={errors.fullName?.message}>
               <input
-                {...register('fullName', { required: 'Required', minLength: { value: 2, message: 'Min 2 chars' } })}
-                className={cn(inputClass, errors.fullName && 'border-red-400')}
+                {...register('fullName', {
+                  required: 'Required',
+                  minLength: { value: 2, message: 'Min 2 chars' },
+                })}
+                className={cn(compactInput, errors.fullName && 'border-red-400')}
                 placeholder="As per PAN / Aadhaar"
+                autoComplete="name"
               />
             </Field>
           </div>
 
           <Field label="Mobile *" error={errors.phone?.message}>
-              <input
-                {...register('phone', {
-                  required: 'Required',
-                  pattern: { value: /^[6-9]\d{9}$/, message: 'Invalid' },
-                })}
-                className={cn(inputClass, errors.phone && 'border-red-400')}
-                placeholder="10-digit"
-                maxLength={10}
-              />
-            </Field>
-            <Field label="City *" error={errors.city?.message}>
-              <CityInput
-                {...register('city', {
-                  required: 'Required',
-                  minLength: { value: 2, message: 'Min 2 characters' },
-                })}
-                className={inputClass}
-                error={!!errors.city}
-              />
-            </Field>
+            <input
+              {...register('phone', {
+                required: 'Required',
+                pattern: { value: /^[6-9]\d{9}$/, message: 'Invalid' },
+              })}
+              className={cn(compactInput, errors.phone && 'border-red-400')}
+              placeholder="10-digit"
+              maxLength={10}
+              inputMode="numeric"
+              autoComplete="tel"
+            />
+          </Field>
+
+          <Field label="City *" error={errors.city?.message}>
+            <CityInput
+              {...register('city', {
+                required: 'Required',
+                minLength: { value: 2, message: 'Min 2 characters' },
+              })}
+              className={compactInput}
+              error={!!errors.city}
+              placeholder="City"
+            />
+          </Field>
 
           <Field label="Email *" error={errors.email?.message}>
             <input
@@ -514,112 +611,116 @@ export function LeadApplicationForm({
                 required: 'Required',
                 pattern: { value: /^\S+@\S+\.\S+$/, message: 'Invalid' },
               })}
-              className={cn(inputClass, errors.email && 'border-red-400')}
+              className={cn(compactInput, errors.email && 'border-red-400')}
               placeholder="you@email.com"
+              autoComplete="email"
             />
           </Field>
 
           <Field label="Employment *" error={errors.employmentType?.message}>
-              <select
-                {...register('employmentType', { required: 'Required' })}
-                className={cn(inputClass, errors.employmentType && 'border-red-400')}
-              >
-                <option value="">Type</option>
-                {EMPLOYMENT_TYPES_LEAD.map((e) => (
-                  <option key={e} value={e}>{e}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Income *" error={errors.monthlyIncome?.message}>
-              <select
-                {...register('monthlyIncome', { required: 'Required' })}
-                className={cn(inputClass, errors.monthlyIncome && 'border-red-400')}
-              >
-                <option value="">Income</option>
-                {INCOME_RANGES.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </Field>
+            <select
+              {...register('employmentType', { required: 'Required' })}
+              className={cn(compactInput, errors.employmentType && 'border-red-400')}
+            >
+              <option value="">Type</option>
+              {EMPLOYMENT_TYPES_LEAD.map((e) => (
+                <option key={e} value={e}>
+                  {e}
+                </option>
+              ))}
+            </select>
+          </Field>
 
-          {!defaultLoanType && (
-            <Field label="Loan Type *" error={errors.loanType?.message}>
-              <select
-                {...register('loanType', { required: 'Required' })}
-                className={cn(inputClass, errors.loanType && 'border-red-400')}
-              >
-                <option value="">Select loan</option>
-                {LOAN_TYPE_OPTIONS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </Field>
+          <Field label="Income (₹) *" error={errors.monthlyIncome?.message}>
+            <input
+              type="text"
+              inputMode="numeric"
+              {...register('monthlyIncome', {
+                required: 'Required',
+                pattern: { value: /^[1-9]\d*$/, message: 'Enter amount' },
+              })}
+              className={cn(compactInput, errors.monthlyIncome && 'border-red-400')}
+              placeholder="e.g. 75000"
+              autoComplete="off"
+            />
+          </Field>
+
+          {!hideLoanFields && (
+            <>
+              <Field label="Loan Amount (₹) *" error={errors.loanAmount?.message}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  {...register('loanAmount', {
+                    required: hideLoanFields ? false : 'Required',
+                    pattern: { value: /^[1-9]\d{3,}$/, message: 'Min ₹10K' },
+                    validate: (v) =>
+                      hideLoanFields || Number(v) >= 10000 || 'Min ₹10,000',
+                  })}
+                  className={cn(compactInput, errors.loanAmount && 'border-red-400')}
+                  placeholder="e.g. 2500000"
+                  autoComplete="off"
+                />
+              </Field>
+              <Field label="Tenure *" error={errors.tenureMonths?.message}>
+                <select
+                  {...register('tenureMonths', {
+                    required: hideLoanFields ? false : 'Required',
+                  })}
+                  className={cn(compactInput, errors.tenureMonths && 'border-red-400')}
+                >
+                  <option value="">Select</option>
+                  {TENURE_OPTIONS.map((t) => (
+                    <option key={t.months} value={String(t.months)}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </>
           )}
 
-          <Field label="Loan Amount (₹) *" error={errors.loanAmount?.message}>
-              <input
-                type="number"
-                {...register('loanAmount', {
-                  required: 'Required',
-                  min: { value: 10000, message: 'Min ₹10K' },
-                })}
-                className={cn(inputClass, errors.loanAmount && 'border-red-400')}
-                placeholder="Amount"
-                min={10000}
-              />
-            </Field>
-            <Field label="Tenure *" error={errors.tenureMonths?.message}>
-              <select
-                {...register('tenureMonths', { required: 'Required' })}
-                className={cn(inputClass, errors.tenureMonths && 'border-red-400')}
-              >
-                <option value="">Tenure</option>
-                {TENURE_OPTIONS.map((t) => (
-                  <option key={t.months} value={String(t.months)}>{t.label}</option>
-                ))}
-              </select>
-            </Field>
-        </div>
+          <label className="col-span-2 flex items-start gap-2 pt-0.5 text-[11px] leading-snug text-gray-500">
+            <input
+              type="checkbox"
+              {...register('agreeTerms', { required: 'Required' })}
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-gray-300 text-brand-600"
+            />
+            <span>I agree to be contacted by {SITE.name} regarding this enquiry.*</span>
+          </label>
+          {errors.agreeTerms && (
+            <p className="col-span-2 text-[11px] text-red-500">{errors.agreeTerms.message}</p>
+          )}
 
-        <label className={cn('mt-4 flex items-start gap-2 text-[11px] text-gray-500', spanFull)}>
           <input
-            type="checkbox"
-            {...register('agreeTerms', { required: 'Required' })}
-            className="mt-0.5 h-3.5 w-3.5 rounded text-brand-600"
+            {...register('_gotcha')}
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
+            aria-hidden
           />
-          I agree to be contacted by {SITE.name}.*
-        </label>
-        {errors.agreeTerms && (
-          <p className={cn('text-[11px] text-red-500', spanFull)}>{errors.agreeTerms.message}</p>
-        )}
 
-        <input
-          {...register('_gotcha')}
-          type="text"
-          tabIndex={-1}
-          autoComplete="off"
-          className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
-          aria-hidden
-        />
-
-        {submitError && (
-          <p className={cn('mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600', spanFull)}>
-            {submitError}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={cn(
-            'flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-700 to-brand-600 font-bold text-white shadow-md shadow-brand-700/20 disabled:opacity-70',
-            applyPage ? 'mt-auto py-4 text-base' : 'mt-4 py-3.5 text-sm',
-            spanFull,
+          {submitError && (
+            <p className="col-span-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
+              {submitError}
+            </p>
           )}
-        >
-          <Send className="h-4 w-4" />
-          {isSubmitting ? 'Submitting…' : 'Submit Application'}
-        </button>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="col-span-2 mt-0.5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-700 to-brand-600 py-3 text-sm font-bold text-white shadow-md shadow-brand-700/20 hover:brightness-105 disabled:opacity-70"
+          >
+            <Send className="h-4 w-4" />
+            {isSubmitting ? 'Submitting…' : 'Submit Application'}
+          </button>
+
+          <p className="col-span-2 flex items-center justify-center gap-1 text-center text-[10px] text-gray-400">
+            <ShieldCheck className="h-3 w-3 text-brand-600" />
+            Secure · Confidential · No approval guarantee
+          </p>
+        </div>
       </form>
     )
   }
@@ -631,10 +732,24 @@ export function LeadApplicationForm({
       className={cn('relative rounded-2xl border border-gray-100 bg-white p-5 shadow-lg', className)}
       noValidate
     >
-      <h2 className="font-heading text-lg font-bold text-brand-900">Apply for Loan</h2>
-      <p className="mt-0.5 mb-4 text-xs text-gray-500">Fill basic details below.</p>
+      <h2 className="font-heading text-lg font-bold text-brand-900">{title ?? 'Global Apply'}</h2>
+      <p className="mt-0.5 mb-4 text-xs text-gray-500">Select product first, then fill details.</p>
 
       <div className="space-y-3">
+        <Field label="Product Type *" error={errors.loanType?.message}>
+          <select
+            {...register('loanType', { required: 'Required' })}
+            className={cn(inputClass, errors.loanType && 'border-red-400')}
+          >
+            <option value="">— Select product —</option>
+            {LOAN_TYPE_OPTIONS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </Field>
+
         <Field label="Full Name *" error={errors.fullName?.message}>
           <input
             {...register('fullName', { required: 'Required', minLength: 2 })}
@@ -686,51 +801,50 @@ export function LeadApplicationForm({
           </Field>
         </div>
 
-        <Field label="Monthly Income *" error={errors.monthlyIncome?.message}>
-          <select
-            {...register('monthlyIncome', { required: 'Required' })}
+        <Field label="Monthly Income (₹) *" error={errors.monthlyIncome?.message}>
+          <input
+            type="number"
+            {...register('monthlyIncome', {
+              required: 'Required',
+              min: { value: 1, message: 'Enter a valid amount' },
+            })}
             className={cn(inputClass, errors.monthlyIncome && 'border-red-400')}
-          >
-            <option value="">Select income</option>
-            {INCOME_RANGES.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+            placeholder="e.g. 75000"
+            min={1}
+            inputMode="numeric"
+          />
         </Field>
 
-        <Field label="Loan Type *" error={errors.loanType?.message}>
-          <select
-            {...register('loanType', { required: 'Required' })}
-            className={cn(inputClass, errors.loanType && 'border-red-400')}
-          >
-            <option value="">Select loan</option>
-            {LOAN_TYPE_OPTIONS.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </Field>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Loan Amount (₹) *" error={errors.loanAmount?.message}>
-            <input
-              type="number"
-              {...register('loanAmount', { required: 'Required', min: 10000 })}
-              className={cn(inputClass, errors.loanAmount && 'border-red-400')}
-              min={10000}
-            />
-          </Field>
-          <Field label="Tenure *" error={errors.tenureMonths?.message}>
-            <select
-              {...register('tenureMonths', { required: 'Required' })}
-              className={cn(inputClass, errors.tenureMonths && 'border-red-400')}
-            >
-              <option value="">Select</option>
-              {TENURE_OPTIONS.map((t) => (
-                <option key={t.months} value={String(t.months)}>{t.label}</option>
-              ))}
-            </select>
-          </Field>
-        </div>
+        {!hideLoanFields && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Loan Amount (₹) *" error={errors.loanAmount?.message}>
+              <input
+                type="number"
+                {...register('loanAmount', {
+                  required: hideLoanFields ? false : 'Required',
+                  min: 10000,
+                })}
+                className={cn(inputClass, errors.loanAmount && 'border-red-400')}
+                min={10000}
+              />
+            </Field>
+            <Field label="Tenure *" error={errors.tenureMonths?.message}>
+              <select
+                {...register('tenureMonths', {
+                  required: hideLoanFields ? false : 'Required',
+                })}
+                className={cn(inputClass, errors.tenureMonths && 'border-red-400')}
+              >
+                <option value="">Select</option>
+                {TENURE_OPTIONS.map((t) => (
+                  <option key={t.months} value={String(t.months)}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        )}
       </div>
 
       <label className="mt-4 flex items-start gap-2 text-xs text-gray-500">

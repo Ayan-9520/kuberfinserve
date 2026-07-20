@@ -91,8 +91,15 @@ export async function registerPartnerApplication(
     return {
       ok: true,
       id: json.id as number | undefined,
-      status: json.status as string | undefined,
+      status: (json.application_status as string | undefined) || (json.status as string | undefined),
       message: json.message as string | undefined,
+      warning:
+        json.kuberone &&
+        typeof json.kuberone === 'object' &&
+        (json.kuberone as { synced?: boolean; skipped?: boolean }).synced === false &&
+        !(json.kuberone as { skipped?: boolean }).skipped
+          ? 'Saved locally. Admin CRM sync pending — check KuberOne bridge.'
+          : undefined,
     }
   } catch {
     return { ok: false, error: 'Network error. Check internet or try again later.' }

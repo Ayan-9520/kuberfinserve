@@ -61,22 +61,22 @@ export function EmiCalculator() {
               />
             </div>
 
-            <div className="flex flex-col justify-center bg-gradient-to-br from-brand-900 to-navy-900 p-6 text-white md:p-7">
-              <div className="flex items-center gap-2 text-brand-200">
-                <Calculator className="h-5 w-5 text-brand-400" />
+            <div className="flex flex-col justify-center border-t border-brand-100 bg-gradient-to-br from-brand-50 via-white to-emerald-50/80 p-6 md:border-t-0 md:border-l md:p-7">
+              <div className="flex items-center gap-2 text-brand-700">
+                <Calculator className="h-5 w-5 text-brand-600" />
                 <span className="text-sm">Monthly EMI</span>
               </div>
-              <p className="mt-2 font-heading text-3xl font-bold text-brand-400 md:text-4xl">
+              <p className="mt-2 font-heading text-3xl font-bold text-brand-700 md:text-4xl">
                 {formatINR(emi)}
               </p>
               <div className="mt-4 space-y-1.5 text-sm">
-                <p className="flex justify-between text-slate-300">
+                <p className="flex justify-between text-slate-600">
                   <span>Total payable</span>
-                  <span className="font-medium text-white">{formatINR(total)}</span>
+                  <span className="font-medium text-navy-900">{formatINR(total)}</span>
                 </p>
-                <p className="flex justify-between text-slate-300">
+                <p className="flex justify-between text-slate-600">
                   <span>Total interest</span>
-                  <span className="font-medium text-white">{formatINR(interest)}</span>
+                  <span className="font-medium text-navy-900">{formatINR(interest)}</span>
                 </p>
               </div>
             </div>
@@ -86,7 +86,7 @@ export function EmiCalculator() {
         <div className="mt-6 text-center">
           <Link
             to="/emi-calculator"
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-700 to-brand-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-600/20 transition-colors hover:from-brand-800 hover:to-brand-600"
           >
             Full EMI Calculator
             <ArrowRight className="h-4 w-4" />

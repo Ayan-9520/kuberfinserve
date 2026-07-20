@@ -15,13 +15,11 @@ const port = Number(process.env.LEAD_API_PORT || 8787)
 const dataDir = resolve(__dirname, 'data')
 const leadsFile = resolve(dataDir, 'leads.json')
 const partnersFile = resolve(dataDir, 'partners.json')
+const visitorsFile = resolve(dataDir, 'visitors.json')
 const partnerAuditFile = resolve(dataDir, 'partner-audit.json')
 const jwtSecret = process.env.JWT_SECRET || 'dev-partner-jwt-secret-change-in-production'
 const mobileApiKey = process.env.MOBILE_API_KEY || 'dev-mobile-api-key'
 const LEAD_DEDUP_HOURS = 24
-const kuberoneApiBase = (process.env.KUBERONE_API_BASE || '').replace(/\/$/, '')
-const kuberoneApiKey = process.env.KUBERONE_API_KEY || ''
-const kuberoneBridgeEnabled = process.env.KUBERONE_BRIDGE_ENABLED === 'true'
 
 function loadEnvFile() {
   for (const name of ['.env', '.env.local']) {
@@ -40,6 +38,13 @@ function loadEnvFile() {
 }
 
 loadEnvFile()
+
+const kuberoneApiBase = (process.env.KUBERONE_API_BASE || '').replace(/\/$/, '')
+const kuberoneApiKey = process.env.KUBERONE_API_KEY || ''
+const kuberoneBridgeEnabled = process.env.KUBERONE_BRIDGE_ENABLED === 'true'
+const kuberonePartnerAuthEnabled =
+  process.env.KUBERONE_PARTNER_AUTH_ENABLED === 'true' ||
+  (kuberoneBridgeEnabled && process.env.KUBERONE_PARTNER_AUTH_ENABLED !== 'false')
 
 const leadsTo = process.env.LEADS_TO || process.env.VITE_LEADS_TO || 'loanleads@kuberfinserve.com'
 const siteName = process.env.VITE_SITE_NAME || 'KuberFinserve'
@@ -83,18 +88,32 @@ async function syncKuberone(path, payload) {
     return { ok: true, skipped: true }
   }
   try {
+    // Zod rejects null; strip null/undefined from nested fields
+    const clean = JSON.parse(
+      JSON.stringify(payload, (_k, v) => (v === null || v === undefined || v === '' ? undefined : v)),
+    )
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' }
     if (kuberoneApiKey) headers['X-Website-Api-Key'] = kuberoneApiKey
     const res = await fetch(`${kuberoneApiBase}${path}`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(clean),
       signal: AbortSignal.timeout(8000),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) {
       console.error('[kuberone-bridge]', path, res.status, body)
-      return { ok: false, status: res.status, error: body?.error?.message || `HTTP ${res.status}` }
+      const errMsg =
+        (typeof body?.error === 'string' && body.error) ||
+        body?.error?.message ||
+        body?.message ||
+        `HTTP ${res.status}`
+      return {
+        ok: false,
+        status: res.status,
+        error: errMsg,
+        details: body?.error?.details ?? body?.error ?? null,
+      }
     }
     return { ok: true, status: res.status, body }
   } catch (err) {
@@ -399,7 +418,7 @@ async function handleSavePartner(payload) {
     contactName: fullName,
     phone,
     email,
-    businessName: partner.company_name || undefined,
+    businessName: partner.company_name || businessType || fullName,
     partnerTypeCode: 'DSA',
     city,
     state,
@@ -410,28 +429,124 @@ async function handleSavePartner(payload) {
     source: partner.source || 'website-become-partner',
   })
 
+  const partnerCode = kuberone.body?.data?.partner?.partnerCode ?? null
+  if (partnerCode) {
+    partner.partner_id = partnerCode
+    writeJsonFile(partnersFile, partners)
+  }
+
   return {
     ok: true,
     id: partnerId,
-    status: 'pending',
+    application_status: 'pending',
     message: 'Application submitted successfully. Our verification team will contact you soon.',
     saved: 'local_json',
+    partner_code: partnerCode,
     kuberone: {
       synced: !!kuberone.ok && !kuberone.skipped,
       skipped: !!kuberone.skipped,
       duplicate: !!kuberone.body?.data?.duplicate,
+      partner_code: partnerCode,
       error: kuberone.error ?? null,
     },
   }
 }
 
-async function handlePartnerLogin(payload) {
+function extractKuberoneError(body, fallback = 'KuberOne request failed') {
+  if (!body) return fallback
+  if (typeof body.error === 'string') return body.error
+  if (body.error?.message) return body.error.message
+  if (body.message) return body.message
+  return fallback
+}
+
+async function handleKuberonePartnerAuth(payload) {
   const identifier = str(payload.identifier || payload.email || payload.partner_id, 150)
+  const mode = str(payload.mode, 20) || 'otp_request'
+  const otp = str(payload.otp, 10)
+
+  if (!identifier) {
+    return { ok: false, error: 'Mobile, email, or Partner Code is required', status: 422 }
+  }
+  if (!['otp_request', 'otp'].includes(mode)) {
+    return { ok: false, error: 'Invalid login mode', status: 422 }
+  }
+  if (mode === 'otp' && !otp) {
+    return { ok: false, error: 'OTP is required', status: 422 }
+  }
+
+  // Client-side style validation when identifier looks like a mobile
+  const digitsOnly = String(identifier).replace(/\D/g, '')
+  const looksLikeMobile =
+    digitsOnly.length >= 10 &&
+    !identifier.includes('@') &&
+    !/^[A-Za-z]{2,}/.test(identifier.trim())
+  if (looksLikeMobile) {
+    const phone = normalizePhone(identifier)
+    if (!phone) {
+      return {
+        ok: false,
+        error: 'Mobile number must be a valid 10-digit Indian number starting with 6–9',
+        status: 422,
+      }
+    }
+  }
+
+  const result = await syncKuberone('/api/v1/public/website/partner-auth', {
+    mode,
+    identifier,
+    ...(otp ? { otp } : {}),
+  })
+
+  if (result.skipped) {
+    return { ok: false, skipped: true, error: 'KuberOne partner auth not configured' }
+  }
+  if (!result.ok) {
+    return {
+      ok: false,
+      error: result.error || extractKuberoneError(result.details, 'Login failed'),
+      status: result.status || 401,
+    }
+  }
+
+  const data = result.body?.data ?? {}
+  if (mode === 'otp_request') {
+    return {
+      ok: true,
+      otp_sent: true,
+      message: data.message || 'OTP sent to your registered mobile number.',
+      phone_hint: data.phone_hint,
+      auth_via: 'kuberone',
+    }
+  }
+
+  const token = data.accessToken || data.token
+  if (!token) {
+    return { ok: false, error: 'KuberOne login did not return a token', status: 502 }
+  }
+
+  return {
+    ok: true,
+    token,
+    partner: data.partner,
+    must_change_password: Boolean(data.must_change_password),
+    auth_via: 'kuberone',
+  }
+}
+
+async function handlePartnerLogin(payload) {
   const mode = str(payload.mode, 20) || 'password'
+
+  if (kuberonePartnerAuthEnabled && (mode === 'otp_request' || mode === 'otp')) {
+    const kAuth = await handleKuberonePartnerAuth(payload)
+    if (!kAuth.skipped) return kAuth
+  }
+
+  const identifier = str(payload.identifier || payload.email || payload.partner_id, 150)
   const password = String(payload.password || '')
   const otp = str(payload.otp, 10)
 
-  if (!identifier) return { ok: false, error: 'Partner ID or email is required', status: 422 }
+  if (!identifier) return { ok: false, error: 'Mobile, email, or Partner Code is required', status: 422 }
 
   const partners = readJsonFile(partnersFile)
   const partner = findPartnerByIdentifier(partners, identifier)
@@ -610,34 +725,7 @@ async function handleSaveLead(payload, defaultChannel = 'website') {
 
   const leads = readLeads()
   const existing = findDuplicateLead(leads, lead)
-  if (existing) {
-    return {
-      ok: true,
-      id: existing.id,
-      duplicate: true,
-      lead: {
-        id: existing.id,
-        external_lead_id: existing.external_lead_id,
-        crm_channel: existing.crm_channel,
-        partner_id: existing.partner_id,
-        status: existing.status,
-      },
-      message: `We already have your application. Reference #${existing.id}`,
-      saved: 'local_json',
-    }
-  }
-
-  const leadId = leads.length > 0 ? Math.max(...leads.map((l) => Number(l.id) || 0)) + 1 : 1
-  lead.id = leadId
-  lead.created_at = new Date().toISOString()
-  lead.status = 'new'
-
-  leads.unshift(lead)
-  writeLeads(leads.slice(0, 500))
-
-  const emails = await sendEmails(lead, leadId)
-
-  const kuberone = await syncKuberone('/api/v1/public/website/leads', {
+  const kuberonePayload = {
     form_type: lead.form_type,
     source: lead.source,
     page_url: lead.page_url,
@@ -657,7 +745,44 @@ async function handleSaveLead(payload, defaultChannel = 'website') {
       partner_id: lead.partner_id,
       crm_channel: lead.crm_channel,
     },
-  })
+  }
+
+  if (existing) {
+    // Still dual-write so Admin gets the lead even if website CRM already saw it
+    const kuberone = await syncKuberone('/api/v1/public/website/leads', kuberonePayload)
+    return {
+      ok: true,
+      id: existing.id,
+      duplicate: true,
+      lead: {
+        id: existing.id,
+        external_lead_id: existing.external_lead_id,
+        crm_channel: existing.crm_channel,
+        partner_id: existing.partner_id,
+        status: existing.status,
+      },
+      message: `We already have your application. Reference #${existing.id}`,
+      saved: 'local_json',
+      kuberone: {
+        synced: !!kuberone.ok && !kuberone.skipped,
+        skipped: !!kuberone.skipped,
+        lead_number: kuberone.body?.data?.lead?.leadNumber ?? null,
+        error: kuberone.error ?? null,
+      },
+    }
+  }
+
+  const leadId = leads.length > 0 ? Math.max(...leads.map((l) => Number(l.id) || 0)) + 1 : 1
+  lead.id = leadId
+  lead.created_at = new Date().toISOString()
+  lead.status = 'new'
+
+  leads.unshift(lead)
+  writeLeads(leads.slice(0, 500))
+
+  const emails = await sendEmails(lead, leadId)
+
+  const kuberone = await syncKuberone('/api/v1/public/website/leads', kuberonePayload)
 
   return {
     ok: true,
@@ -750,6 +875,116 @@ async function handleSendLead(payload) {
   return { ok: true, emails: results }
 }
 
+function readVisitors() {
+  return readJsonFile(visitorsFile)
+}
+
+function writeVisitors(rows) {
+  writeJsonFile(visitorsFile, rows)
+}
+
+async function handleSaveVisitor(payload) {
+  if (payload._gotcha || payload.website) {
+    return { ok: true, id: 0, saved: 'honeypot' }
+  }
+
+  const city = String(payload.city || '').trim()
+  if (city.length < 2) {
+    return { ok: false, error: 'City is required', status: 422 }
+  }
+
+  let phone = null
+  if (payload.phone) {
+    phone = normalizePhone(payload.phone)
+    if (!phone) {
+      return { ok: false, error: 'Valid 10-digit Indian mobile number required', status: 422 }
+    }
+  }
+
+  let email = null
+  const emailRaw = String(payload.email || '').trim()
+  if (emailRaw) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
+      return { ok: false, error: 'Valid email required', status: 422 }
+    }
+    email = emailRaw.toLowerCase()
+  }
+
+  const name = String(payload.name || '').trim() || null
+  const externalId = String(payload.external_visitor_id || '').trim() || crypto.randomUUID()
+  const sessionId = String(payload.session_id || '').trim() || null
+
+  const visitors = readVisitors()
+  const existing = visitors.find((v) => v.external_visitor_id === externalId)
+
+  const record = {
+    id: existing?.id,
+    external_visitor_id: externalId,
+    city,
+    name: name || existing?.name || null,
+    phone: phone || existing?.phone || null,
+    email: email || existing?.email || null,
+    page_url: payload.page_url || existing?.page_url || null,
+    referrer: payload.referrer || existing?.referrer || null,
+    utm_source: payload.utm_source || existing?.utm_source || null,
+    utm_medium: payload.utm_medium || existing?.utm_medium || null,
+    utm_campaign: payload.utm_campaign || existing?.utm_campaign || null,
+    session_id: sessionId || existing?.session_id || null,
+    created_at: existing?.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+
+  const kuberonePayload = {
+    city: record.city,
+    name: record.name || undefined,
+    phone: record.phone || undefined,
+    email: record.email || undefined,
+    page_url: record.page_url || undefined,
+    referrer: record.referrer || undefined,
+    utm_source: record.utm_source || undefined,
+    utm_medium: record.utm_medium || undefined,
+    utm_campaign: record.utm_campaign || undefined,
+    session_id: record.session_id || undefined,
+    external_visitor_id: record.external_visitor_id,
+  }
+
+  if (existing) {
+    Object.assign(existing, record)
+    writeVisitors(visitors.slice(0, 1000))
+    const kuberone = await syncKuberone('/api/v1/public/website/visitors', kuberonePayload)
+    return {
+      ok: true,
+      id: existing.id,
+      duplicate: true,
+      saved: 'local_json',
+      kuberone: {
+        synced: !!kuberone.ok && !kuberone.skipped,
+        skipped: !!kuberone.skipped,
+        error: kuberone.error ?? null,
+      },
+    }
+  }
+
+  const visitorId = visitors.length > 0 ? Math.max(...visitors.map((v) => Number(v.id) || 0)) + 1 : 1
+  record.id = visitorId
+  visitors.unshift(record)
+  writeVisitors(visitors.slice(0, 1000))
+
+  const kuberone = await syncKuberone('/api/v1/public/website/visitors', kuberonePayload)
+
+  return {
+    ok: true,
+    id: visitorId,
+    duplicate: false,
+    saved: 'local_json',
+    kuberone: {
+      synced: !!kuberone.ok && !kuberone.skipped,
+      skipped: !!kuberone.skipped,
+      error: kuberone.error ?? null,
+    },
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     cors(res)
@@ -762,6 +997,7 @@ const server = http.createServer(async (req, res) => {
   const isSaveLead = url === '/api/save-lead.php' || url === '/api/save-lead'
   const isSendLead = url === '/api/send-lead' || url === '/api/send-lead.php'
   const isSavePartner = url === '/api/save-partner.php'
+  const isSaveVisitor = url === '/api/save-visitor.php' || url === '/api/save-visitor'
   const isPartnerLogin = url === '/api/partner-login.php'
   const isMobileSaveLead = url === '/api/mobile/save-lead.php'
   const isDevApprove = url === '/api/dev/approve-partner'
@@ -771,6 +1007,7 @@ const server = http.createServer(async (req, res) => {
     (!isSaveLead &&
       !isSendLead &&
       !isSavePartner &&
+      !isSaveVisitor &&
       !isPartnerLogin &&
       !isMobileSaveLead &&
       !isDevApprove)
@@ -805,20 +1042,31 @@ const server = http.createServer(async (req, res) => {
   else if (isMobileSaveLead) result = await handleSaveLead(payload, 'mobile-app')
   else if (isSendLead) result = await handleSendLead(payload)
   else if (isSavePartner) result = await handleSavePartner(payload)
+  else if (isSaveVisitor) result = await handleSaveVisitor(payload)
   else if (isPartnerLogin) result = await handlePartnerLogin(payload)
   else result = await handleDevApprovePartner(payload)
-  const status = result.status || (result.ok ? 200 : 500)
+  const httpStatus =
+    typeof result.status === 'number' ? result.status : result.ok ? 200 : 500
   const { status: _s, ...data } = result
-  json(res, status, data)
+  json(res, httpStatus, data)
 })
 
 server.listen(port, () => {
   console.log(`Lead API http://localhost:${port}`)
   console.log(`  POST /api/save-lead.php      → save to server/data/leads.json`)
   console.log(`  POST /api/save-partner.php   → save to server/data/partners.json`)
+  console.log(`  POST /api/save-visitor.php   → save to server/data/visitors.json`)
   console.log(`  POST /api/partner-login.php  → partner JWT login`)
   console.log(`  POST /api/mobile/save-lead.php → mobile app leads (same CRM)`)
   console.log(`  POST /api/send-lead          → SMTP emails`)
+  if (kuberoneBridgeEnabled && kuberoneApiBase) {
+    console.log(`  KuberOne bridge ON → ${kuberoneApiBase}/api/v1/public/website/*`)
+    if (kuberonePartnerAuthEnabled) {
+      console.log('  KuberOne partner OTP auth ON → /partner-auth')
+    }
+  } else {
+    console.warn('  KuberOne bridge OFF — set KUBERONE_BRIDGE_ENABLED=true in .env for Admin CRM sync')
+  }
   if (!transporter) {
     console.warn('  SMTP_USER / SMTP_PASS missing — leads save locally; emails need .env (SETUP-EMAIL.md)')
   } else {

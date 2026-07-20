@@ -28,17 +28,15 @@ $password = (string) ($data['password'] ?? '');
 $otp = api_str($data['otp'] ?? null, 10);
 
 if (!$identifier) {
-    api_json_response(['ok' => false, 'error' => 'Partner ID or email is required'], 422);
+    api_json_response(['ok' => false, 'error' => 'Mobile, email, or Partner Code is required'], 422);
 }
 
-// Optional: KuberOne OTP path (DSA-aligned) when enabled and identifier is a mobile number
-$phoneGuess = api_normalize_phone($identifier);
+// KuberOne OTP path (DSA-aligned) when enabled — accepts mobile / email / Partner Code
 if (
-    $phoneGuess
-    && !empty($config['kuberone_partner_auth_enabled'])
+    !empty($config['kuberone_partner_auth_enabled'])
     && in_array($mode, ['otp_request', 'otp'], true)
 ) {
-    $kAuth = api_kuberone_partner_otp($config, $mode, $phoneGuess, $otp);
+    $kAuth = api_kuberone_partner_otp($config, $mode, $identifier, $otp);
     if (!empty($kAuth['skipped'])) {
         // fall through to Hostinger partner auth
     } elseif (!$kAuth['ok']) {
@@ -48,6 +46,7 @@ if (
             'ok' => true,
             'message' => $kAuth['message'] ?? 'OTP sent.',
             'otp_sent' => true,
+            'phone_hint' => $kAuth['phone_hint'] ?? null,
             'auth_via' => 'kuberone',
         ]);
     } else {

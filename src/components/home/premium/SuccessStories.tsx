@@ -24,10 +24,10 @@ export function SuccessStories() {
               transition={{ delay: i * 0.1 }}
               className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_12px_40px_rgb(15_23_42/0.08)]"
             >
-              <div className="bg-gradient-to-br from-brand-900 to-navy-900 p-6 text-white">
-                <p className="font-heading text-3xl font-bold text-brand-400">{story.amount}</p>
-                <p className="mt-1 font-semibold">{story.product}</p>
-                <p className="mt-3 flex items-center gap-2 text-sm text-brand-200">
+              <div className="bg-gradient-to-br from-brand-50 via-white to-emerald-50 p-6">
+                <p className="font-heading text-3xl font-bold text-brand-700">{story.amount}</p>
+                <p className="mt-1 font-semibold text-navy-900">{story.product}</p>
+                <p className="mt-3 flex items-center gap-2 text-sm text-brand-700">
                   <Clock className="h-4 w-4" />
                   {story.timeline}
                 </p>

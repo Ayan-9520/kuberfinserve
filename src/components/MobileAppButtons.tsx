@@ -1,10 +1,11 @@
-import { Smartphone, TabletSmartphone, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import {
   downloadMobileApp,
   getCustomerAppDownloadUrl,
   getPartnerAppDownloadUrl,
   openMobileApp,
 } from '@/utils/partnerApp'
+import { StoreBadges } from '@/components/StoreBadges'
 import { cn } from '@/utils/cn'
 
 type AppTarget = 'customer' | 'partner'
@@ -53,12 +54,6 @@ export function MobileAppButtons({
       ? 'rounded-lg border border-white/15 px-3 py-2 text-xs font-medium text-slate-300 transition-colors hover:border-brand-500/40 hover:text-brand-400'
       : 'rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-navy-900 transition-colors hover:border-brand-300 hover:text-brand-700'
 
-  const platformBtn = isPartners
-    ? secondaryBtn
-    : isFooter
-      ? secondaryBtn
-      : 'flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700'
-
   return (
     <div
       className={cn(
@@ -81,7 +76,6 @@ export function MobileAppButtons({
             isFooter && 'w-full',
           )}
         >
-          <Smartphone className="h-4 w-4 shrink-0" />
           {copy.download}
         </button>
         <button
@@ -98,25 +92,12 @@ export function MobileAppButtons({
         </button>
       </div>
 
-      {showPlatformDownloads && !isCompact && (
-        <div className={cn('flex flex-wrap gap-2', isFooter ? 'flex-col' : 'sm:grid sm:grid-cols-2')}>
-          <button
-            type="button"
-            onClick={() => downloadMobileApp(target, 'android')}
-            className={cn(platformBtn, isFooter && 'w-full')}
-          >
-            <Smartphone className="h-4 w-4 shrink-0" />
-            Android
-          </button>
-          <button
-            type="button"
-            onClick={() => downloadMobileApp(target, 'ios')}
-            className={cn(platformBtn, isFooter && 'w-full')}
-          >
-            <TabletSmartphone className="h-4 w-4 shrink-0" />
-            iOS
-          </button>
-        </div>
+      {showPlatformDownloads && (
+        <StoreBadges
+          target={target}
+          size={isFooter || isCompact ? 'sm' : 'md'}
+          className={cn(isFooter ? 'flex-col sm:flex-row' : 'justify-center')}
+        />
       )}
 
       {!isFooter && !isCompact && (
@@ -132,7 +113,7 @@ export function MobileAppButtons({
             rel="noopener noreferrer"
             className="text-brand-600 hover:underline"
           >
-            Play Store
+            Google Play
           </a>{' '}
           or{' '}
           <a

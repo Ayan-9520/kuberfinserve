@@ -14,10 +14,11 @@ export function AboutIllustration({ className }: AboutIllustrationProps) {
       role="img"
       aria-label="Financial advisory illustration"
     >
-      <rect width="640" height="480" fill="#f5faf8" />
-      <ellipse cx="520" cy="90" rx="120" ry="80" fill="#d4f5e8" opacity="0.9" />
-      <ellipse cx="100" cy="400" rx="140" ry="70" fill="#d4f5e8" opacity="0.6" />
-      <rect x="72" y="88" width="200" height="140" rx="16" fill="#fff" stroke="#b8e8d8" strokeWidth="2" />
+      <rect width="640" height="480" fill="#ecf8f3" />
+      <ellipse cx="520" cy="90" rx="120" ry="80" fill="#b8e8d8" opacity="0.95" />
+      <ellipse cx="100" cy="400" rx="140" ry="70" fill="#c5f0e0" opacity="0.75" />
+      <rect x="40" y="40" width="560" height="400" rx="24" fill="#fff" fillOpacity="0.55" />
+      <rect x="72" y="88" width="200" height="140" rx="16" fill="#fff" stroke="#29b68d" strokeWidth="2" />
       <rect x="92" y="168" width="28" height="40" rx="6" fill="#29b68d" opacity="0.35" />
       <rect x="128" y="148" width="28" height="60" rx="6" fill="#29b68d" />
       <rect x="164" y="128" width="28" height="80" rx="6" fill="#245e4e" />
