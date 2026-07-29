@@ -7,66 +7,52 @@ import { useScrolled } from '@/hooks/useScrolled'
 import { cn } from '@/utils/cn'
 import { BrandLogo } from '@/components/BrandLogo'
 
+/**
+ * Public IA: Home · Loans (dropdown) · Insurance · Eligibility · EMI · About · Become Partner · Login
+ * Partner Academy is not a separate nav item — it lives inside Become Partner + KuberOne app.
+ */
 const MAIN_LINKS = [
   { label: 'Home', path: '/' },
   { label: 'Insurance', path: '/insurance' },
-  { label: 'EMI Calculator', path: '/emi-calculator' },
-  { label: 'Check Eligibility', path: '/check-eligibility' },
-  { label: 'CIBIL', path: '/cibil' },
-  { label: 'About Us', path: '/about-us' },
-  { label: 'Contact', path: '/contact-us' },
+  { label: 'Eligibility', path: '/check-eligibility' },
+  { label: 'EMI', path: '/emi-calculator' },
+  { label: 'About', path: '/about-us' },
   { label: 'Become Partner', path: SITE.becomePartnerUrl },
-  { label: 'Partner Login', path: SITE.partnerLoginUrl },
+  { label: 'Login', path: SITE.partnerLoginUrl },
 ] as const
+
+const linkBase =
+  'relative inline-flex shrink-0 items-center whitespace-nowrap rounded-lg px-2 py-1.5 text-[11.5px] font-semibold tracking-tight transition-colors duration-200 hover:bg-white/90 2xl:px-2.5 2xl:text-[12.5px]'
 
 function NavItem({
   to,
   children,
   onClick,
+  title,
 }: {
   to: string
   children: ReactNode
   onClick?: () => void
+  title?: string
 }) {
-  const location = useLocation()
-  const isHash = to.includes('#')
-  const hash = isHash ? to.split('#')[1] : ''
-  const path = isHash ? to.split('#')[0] || '/' : to
-  const isActive =
-    !isHash && location.pathname === path
-      ? true
-      : isHash && location.pathname === '/' && location.hash === `#${hash}`
-
-  if (isHash) {
-    return (
-      <Link
-        to={to}
-        onClick={onClick}
-        className={cn(
-          'rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all hover:text-brand-600',
-          isActive ? 'text-brand-600' : 'text-slate-700',
-        )}
-      >
-        {children}
-      </Link>
-    )
-  }
-
   return (
     <NavLink
       to={to}
       end={to === '/'}
       onClick={onClick}
-      className={({ isActive: active }) =>
-        cn(
-          'rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all',
-          active || isActive
-            ? 'bg-brand-600/10 text-brand-700'
-            : 'text-slate-700 hover:bg-slate-100 hover:text-brand-800',
-        )
+      title={title}
+      className={({ isActive }) =>
+        cn(linkBase, isActive ? 'text-brand-700' : 'text-slate-600 hover:text-brand-800')
       }
     >
-      {children}
+      {({ isActive }) => (
+        <>
+          {children}
+          {isActive ? (
+            <span className="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-gradient-to-r from-brand-700 to-brand-500" />
+          ) : null}
+        </>
+      )}
     </NavLink>
   )
 }
@@ -89,7 +75,7 @@ function MobileNavLink({
         cn(
           'block rounded-2xl px-4 py-3 text-center text-[15px] font-semibold tracking-tight transition-all',
           isActive
-            ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25'
+            ? 'bg-gradient-to-r from-brand-700 to-brand-600 text-white shadow-md shadow-brand-600/25'
             : 'text-navy-900 hover:bg-brand-50 hover:text-brand-800',
         )
       }
@@ -99,12 +85,20 @@ function MobileNavLink({
   )
 }
 
+const MOBILE_LABELS: Record<string, string> = {
+  '/emi-calculator': 'EMI Calculator',
+  '/check-eligibility': 'Check Eligibility',
+  '/about-us': 'About Us',
+}
+
 export function Navbar() {
   const scrolled = useScrolled(20)
+  const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loansOpen, setLoansOpen] = useState(false)
   const [mobileLoansOpen, setMobileLoansOpen] = useState(true)
   const closeMobile = () => setMobileOpen(false)
+  const loansActive = location.pathname.startsWith('/loans') || location.pathname === '/credit-card'
 
   return (
     <>
@@ -112,32 +106,46 @@ export function Navbar() {
         className={cn(
           'sticky z-50 transition-all duration-300 lg:top-7',
           scrolled
-            ? 'top-0 border-b border-slate-200/80 bg-white/95 shadow-[0_8px_32px_rgb(15_23_42/0.08)] backdrop-blur-xl'
-            : 'top-0 border-b border-slate-200/70 bg-white',
+            ? 'top-0 border-b border-brand-900/8 bg-white/92 shadow-[0_10px_40px_-12px_rgba(5,61,50,0.18)] backdrop-blur-xl'
+            : 'top-0 border-b border-slate-200/70 bg-white/97 backdrop-blur-md',
         )}
       >
-        <div className="container relative mx-auto flex items-center justify-between gap-3 px-4 py-2.5 lg:py-2">
-          <div className="relative z-10">
-            <BrandLogo showName compact />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-500/35 to-transparent" />
+
+        <div className="mx-auto flex h-[3.25rem] w-full max-w-[1400px] items-center gap-4 px-5 sm:px-6 lg:h-14 lg:gap-6 lg:px-8 xl:px-10">
+          <div className="shrink-0">
+            <BrandLogo showName compact className="!h-9 !w-9 md:!h-10 md:!w-10" />
           </div>
 
-          <nav className="hidden items-center gap-0.5 2xl:flex" aria-label="Main navigation">
-            <NavItem to="/">Home</NavItem>
+          <nav
+            className="hidden min-w-0 flex-1 items-center justify-center gap-x-0.5 xl:flex 2xl:gap-x-1"
+            aria-label="Main navigation"
+          >
+            <div className="inline-flex max-w-full flex-nowrap items-center gap-x-0.5 rounded-2xl bg-slate-50/80 px-2 py-1 ring-1 ring-slate-200/70 2xl:gap-x-1 2xl:px-2.5">
+            <NavItem to="/" title="Home">
+              Home
+            </NavItem>
 
             <div
-              className="relative"
+              className="relative shrink-0"
               onMouseEnter={() => setLoansOpen(true)}
               onMouseLeave={() => setLoansOpen(false)}
             >
               <button
                 type="button"
                 className={cn(
-                  'flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100',
-                  loansOpen && 'bg-brand-600/10 text-brand-700',
+                  linkBase,
+                  'gap-0.5',
+                  loansActive ? 'text-brand-700' : 'text-slate-600 hover:text-brand-800',
                 )}
               >
                 Loans
-                <ChevronDown className={cn('h-4 w-4 transition-transform', loansOpen && 'rotate-180')} />
+                <ChevronDown
+                  className={cn('h-3 w-3 opacity-70 transition-transform', loansOpen && 'rotate-180')}
+                />
+                {loansActive ? (
+                  <span className="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-gradient-to-r from-brand-700 to-brand-500" />
+                ) : null}
               </button>
               <AnimatePresence>
                 {loansOpen && (
@@ -145,13 +153,16 @@ export function Navbar() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-0 top-full z-50 mt-2 max-h-[min(70vh,22rem)] w-60 overflow-y-auto rounded-2xl border border-slate-200/80 bg-white py-2 shadow-xl"
+                    className="absolute left-0 top-full z-50 mt-2 max-h-[min(70vh,22rem)] w-64 overflow-y-auto rounded-2xl border border-brand-100/80 bg-white/97 py-2 shadow-[0_20px_50px_-12px_rgba(5,61,50,0.25)] backdrop-blur-xl"
                   >
+                    <p className="px-4 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-brand-700/80">
+                      Loan products
+                    </p>
                     {LOAN_NAV.map((loan) => (
                       <Link
                         key={loan.path}
                         to={loan.path}
-                        className="block px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-700"
+                        className="block px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-800"
                       >
                         {loan.label}
                       </Link>
@@ -161,30 +172,30 @@ export function Navbar() {
               </AnimatePresence>
             </div>
 
-            {MAIN_LINKS.slice(1).map((link) => (
-              <NavItem key={link.path} to={link.path}>
+            {MAIN_LINKS.filter((l) => l.path !== '/').map((link) => (
+              <NavItem key={link.path} to={link.path} title={MOBILE_LABELS[link.path] || link.label}>
                 {link.label}
               </NavItem>
             ))}
+            </div>
           </nav>
 
-          <div className="hidden items-center gap-2 lg:flex">
+          <div className="ml-auto flex shrink-0 items-center gap-2 xl:ml-0">
             <Link
               to={SITE.applyLoanUrl}
-              className="rounded-lg bg-gradient-to-r from-brand-700 to-brand-600 px-4 py-2 text-sm font-bold text-white shadow-md shadow-brand-600/25 transition-transform hover:scale-[1.02]"
+              className="hidden rounded-xl bg-gradient-to-r from-brand-800 via-brand-700 to-brand-500 px-4 py-2 text-[12px] font-bold text-white shadow-[0_8px_20px_-6px_rgba(0,195,137,0.5)] transition hover:brightness-105 sm:inline-flex 2xl:px-5 2xl:text-sm"
             >
               Apply Now
             </Link>
+            <button
+              type="button"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-navy-900 ring-1 ring-brand-100/80 transition hover:bg-brand-100 xl:hidden"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-navy-900 ring-1 ring-brand-100 transition hover:bg-brand-100 2xl:hidden"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
         </div>
       </header>
 
@@ -195,7 +206,7 @@ export function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-navy-900/45 backdrop-blur-md 2xl:hidden"
+              className="fixed inset-0 z-[60] bg-navy-950/50 backdrop-blur-md xl:hidden"
               onClick={closeMobile}
             />
             <motion.aside
@@ -203,7 +214,7 @@ export function Navbar() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.98 }}
               transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-              className="fixed inset-x-3 bottom-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[70] flex flex-col overflow-hidden rounded-[1.75rem] bg-gradient-to-b from-white via-white to-brand-50/40 shadow-[0_24px_80px_-12px_rgba(15,23,42,0.35)] ring-1 ring-brand-900/10 2xl:hidden sm:inset-x-6"
+              className="fixed inset-x-3 bottom-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[70] flex flex-col overflow-hidden rounded-[1.75rem] bg-gradient-to-b from-white via-white to-brand-50/50 shadow-[0_24px_80px_-12px_rgba(15,23,42,0.4)] ring-1 ring-brand-900/10 xl:hidden sm:inset-x-6"
             >
               <div className="relative border-b border-brand-100/80 bg-white/90 px-5 pb-4 pt-5 backdrop-blur-sm">
                 <button
@@ -276,9 +287,9 @@ export function Navbar() {
                   </AnimatePresence>
 
                   <div className="mt-2 space-y-1">
-                    {MAIN_LINKS.slice(1).map((link) => (
+                    {MAIN_LINKS.filter((l) => l.path !== '/').map((link) => (
                       <MobileNavLink key={link.path} to={link.path} onClick={closeMobile}>
-                        {link.label}
+                        {MOBILE_LABELS[link.path] || link.label}
                       </MobileNavLink>
                     ))}
                   </div>
@@ -289,7 +300,7 @@ export function Navbar() {
                 <Link
                   to={SITE.applyLoanUrl}
                   onClick={closeMobile}
-                  className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-brand-700 to-brand-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-600/25"
+                  className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-brand-800 to-brand-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-600/30"
                 >
                   Apply Now
                 </Link>

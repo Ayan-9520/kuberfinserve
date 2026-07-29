@@ -24,21 +24,21 @@ export function HeroLoanVisual() {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, delay: 0.12 }}
-      className="relative mx-auto w-full max-w-[500px]"
+      className="relative mx-auto w-full max-w-[420px]"
     >
       <div
-        className="pointer-events-none absolute -inset-6 rounded-full bg-[radial-gradient(circle,rgba(13,107,87,0.16),transparent_68%)] blur-2xl"
+        className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(13,107,87,0.14),transparent_68%)] blur-2xl"
         aria-hidden
       />
 
       <motion.div
-        className="pointer-events-none absolute -inset-2 rounded-[2.25rem] border border-dashed border-brand-300/40"
+        className="pointer-events-none absolute -inset-1.5 rounded-[1.75rem] border border-dashed border-brand-300/35"
         animate={{ rotate: 360 }}
         transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
         aria-hidden
       />
 
-      <div className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white p-4 shadow-[0_28px_80px_-20px_rgba(15,23,42,0.2)] sm:p-5">
+      <div className="relative overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white p-3.5 shadow-[0_22px_60px_-18px_rgba(15,23,42,0.18)] sm:p-4">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_50%_-10%,rgba(0,195,137,0.12),transparent_55%)]" />
 
         <div className="relative mb-4 flex items-center justify-between">
@@ -72,7 +72,7 @@ export function HeroLoanVisual() {
           </motion.span>
         </div>
 
-        <div className="relative mx-auto aspect-square max-h-[300px] w-full max-w-[300px] sm:max-h-[320px]">
+        <div className="relative mx-auto aspect-square max-h-[240px] w-full max-w-[240px] sm:max-h-[260px]">
           {[0, 1, 2].map((ring) => (
             <motion.div
               key={ring}

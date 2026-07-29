@@ -7,6 +7,8 @@ export interface PartnerRegistrationResult {
   status?: string
   message?: string
   warning?: string
+  partnerCode?: string
+  syncedToAdmin?: boolean
 }
 
 export interface PartnerLoginResult {
@@ -88,21 +90,54 @@ export async function registerPartnerApplication(
       return { ok: false, error: (json.error as string) || 'Could not submit partner application.' }
     }
 
+    const kuberone =
+      json.kuberone && typeof json.kuberone === 'object'
+        ? (json.kuberone as {
+            synced?: boolean
+            skipped?: boolean
+            partner_code?: string | null
+            error?: string | null
+          })
+        : null
+    const partnerCode =
+      (json.partner_code as string | undefined) || kuberone?.partner_code || undefined
+    const syncedToAdmin = !!(kuberone?.synced || kuberone?.skipped || partnerCode)
+    const savedLocally = typeof json.id === 'number' && json.id > 0
+
+    // Production (Hostinger): DB + emails is success; CRM sync warning if offline.
+    // Local DEV: still surface sync failure so Docker/tunnel issues are obvious.
+    if (!syncedToAdmin && import.meta.env.DEV && !import.meta.env.PROD) {
+      return {
+        ok: false,
+        error:
+          kuberone?.error ||
+          'Application saved, but Admin CRM sync failed. Start KuberOne backend (:4000) and submit again.',
+        id: json.id as number | undefined,
+        partnerCode,
+        syncedToAdmin: false,
+      }
+    }
+
     return {
       ok: true,
       id: json.id as number | undefined,
       status: (json.application_status as string | undefined) || (json.status as string | undefined),
-      message: json.message as string | undefined,
+      message:
+        (json.message as string | undefined) ||
+        'Application submitted successfully. Our team will contact you within 48 hours.',
+      partnerCode,
+      syncedToAdmin: syncedToAdmin || savedLocally,
       warning:
-        json.kuberone &&
-        typeof json.kuberone === 'object' &&
-        (json.kuberone as { synced?: boolean; skipped?: boolean }).synced === false &&
-        !(json.kuberone as { skipped?: boolean }).skipped
-          ? 'Saved locally. Admin CRM sync pending — check KuberOne bridge.'
-          : undefined,
+        syncedToAdmin || !savedLocally
+          ? undefined
+          : kuberone?.error ||
+            'Saved on website. Admin CRM sync pending — check tunnel / kuberone.online API.',
     }
   } catch {
-    return { ok: false, error: 'Network error. Check internet or try again later.' }
+    return {
+      ok: false,
+      error: 'Partner API unreachable. Run npm run dev (website API on :8787) and keep Docker backend on :4000.',
+    }
   }
 }
 

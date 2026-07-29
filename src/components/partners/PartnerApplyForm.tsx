@@ -27,6 +27,7 @@ export function PartnerApplyForm({ className, variant = 'default' }: PartnerAppl
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitOk, setSubmitOk] = useState(false)
   const [applicationId, setApplicationId] = useState<number | null>(null)
+  const [partnerCode, setPartnerCode] = useState<string | null>(null)
   const { showSuccess, showError } = useToast()
   const phoneAdvanceLock = useRef(false)
   const locationAdvanceLock = useRef(false)
@@ -140,10 +141,12 @@ export function PartnerApplyForm({ className, variant = 'default' }: PartnerAppl
 
     setSubmitOk(true)
     setApplicationId(result.id ?? null)
+    setPartnerCode(result.partnerCode ?? null)
     showSuccess(
-      result.id
-        ? `Registration successful. Reference #${result.id}. We will email you after review.`
-        : 'Registration successful. We will email you after our team reviews your application.',
+      result.message ||
+        (result.partnerCode
+          ? `Registration successful (${result.partnerCode}). Our team will contact you within 48 hours.`
+          : 'Registration successful. Our team will contact you within 48 hours.'),
     )
     reset()
     setStep(0)
@@ -174,8 +177,14 @@ export function PartnerApplyForm({ className, variant = 'default' }: PartnerAppl
                 (reference <strong>#{applicationId}</strong>)
               </>
             ) : null}
-            . Our team will verify your details and email you once it is approved. Login will be
-            available only after approval.
+            {partnerCode ? (
+              <>
+                {' '}
+                · Partner Code <strong>{partnerCode}</strong>
+              </>
+            ) : null}
+            . Our team will contact you within <strong>48 hours</strong> with next steps, training
+            access, and approval status. Login will be available only after approval.
           </p>
         </div>
 
@@ -190,8 +199,8 @@ export function PartnerApplyForm({ className, variant = 'default' }: PartnerAppl
                 1
               </span>
               <span>
-                Our verification team reviews your application. You will receive an email when it is
-                approved.
+                Within <strong>48 hours</strong>, our verification team reviews your application and
+                emails you the next steps.
               </span>
             </li>
             <li className="flex gap-2.5">
@@ -228,6 +237,7 @@ export function PartnerApplyForm({ className, variant = 'default' }: PartnerAppl
             onClick={() => {
               setSubmitOk(false)
               setApplicationId(null)
+              setPartnerCode(null)
             }}
             className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-navy-700 hover:bg-slate-50"
           >
@@ -236,7 +246,7 @@ export function PartnerApplyForm({ className, variant = 'default' }: PartnerAppl
         </div>
 
         <p className="mt-3 text-center text-[11px] text-gray-500">
-          A confirmation email has been sent to your registered email address.
+          Keep your Partner Code handy. Our team responds within 48 hours.
         </p>
       </motion.div>
     )

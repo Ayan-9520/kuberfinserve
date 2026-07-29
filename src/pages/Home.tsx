@@ -17,10 +17,10 @@ export function Home() {
   return (
     <>
       <SeoHead
-        title="KuberFinserve | India's AI Powered Financial Distribution Platform"
-        description="India's AI powered financial distribution platform. Home loans, business loans, LAP, personal loans, insurance & credit cards from 50+ lenders. Build your financial business with KuberOne."
+        title="KuberFinserve | India's AI-Powered Financial Distribution Network"
+        description="India's AI-Powered Financial Distribution Network. Connecting customers, financial professionals and lending institutions through trust, technology and a nationwide partner ecosystem — powered by KuberOne."
         path="/"
-        keywords="KuberFinserve, financial distribution platform India, AI loan matching, home loan, business loan, loan against property, KuberOne, become financial partner"
+        keywords="KuberFinserve, AI financial distribution network India, KuberOne, become financial partner, financial entrepreneur, partner academy, loan fulfillment, weekly payouts"
       />
       <JsonLd data={faqSchema} id="jsonld-faq" />
       <PremiumHome />

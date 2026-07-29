@@ -84,7 +84,12 @@ export function BrandLogo({
     <span className="inline-flex items-center gap-2.5">
       <LogoMark variant={markVariant} compact={compact} className={className} />
       {showName && (
-        <span className="hidden font-heading text-sm font-bold tracking-tight text-navy-900 sm:block md:text-base">
+        <span
+          className={cn(
+            'hidden font-heading font-bold tracking-tight text-navy-900 sm:block',
+            compact ? 'text-xs md:text-[13px]' : 'text-sm md:text-base',
+          )}
+        >
           {beforeFin}
           {fin && <span style={{ color: '#00c389' }}>{fin}</span>}
           {afterFin}

@@ -32,7 +32,8 @@ function loadEnvFile() {
       if (i < 1) continue
       const key = t.slice(0, i).trim()
       const val = t.slice(i + 1).trim().replace(/^["']|["']$/g, '')
-      if (!process.env[key]) process.env[key] = val
+      // Always apply KuberOne bridge keys from .env so local Admin sync cannot stay stuck OFF
+      if (key.startsWith('KUBERONE_') || !process.env[key]) process.env[key] = val
     }
   }
 }
@@ -435,17 +436,42 @@ async function handleSavePartner(payload) {
     writeJsonFile(partnersFile, partners)
   }
 
+  const synced = !!kuberone.ok && !kuberone.skipped
+  const skipped = !!kuberone.skipped
+  const duplicate = !!kuberone.body?.data?.duplicate
+
+  // Bridge is required for Admin Partners list. Fail loudly so the form never shows false success.
+  if (kuberoneBridgeEnabled && !synced && !skipped && !duplicate) {
+    return {
+      ok: false,
+      status: 502,
+      error:
+        kuberone.error ||
+        'Could not sync to Admin CRM. Ensure KuberOne backend is running on :4000 and try again.',
+      id: partnerId,
+      partner_code: partnerCode,
+      kuberone: {
+        synced: false,
+        skipped: false,
+        duplicate: false,
+        partner_code: partnerCode,
+        error: kuberone.error ?? null,
+      },
+    }
+  }
+
   return {
     ok: true,
     id: partnerId,
     application_status: 'pending',
-    message: 'Application submitted successfully. Our verification team will contact you soon.',
+    message:
+      'Application submitted successfully. Our team will contact you within 48 hours with next steps.',
     saved: 'local_json',
     partner_code: partnerCode,
     kuberone: {
-      synced: !!kuberone.ok && !kuberone.skipped,
-      skipped: !!kuberone.skipped,
-      duplicate: !!kuberone.body?.data?.duplicate,
+      synced: synced || skipped || duplicate,
+      skipped,
+      duplicate,
       partner_code: partnerCode,
       error: kuberone.error ?? null,
     },

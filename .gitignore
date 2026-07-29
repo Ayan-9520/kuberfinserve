@@ -14,9 +14,13 @@ dist-ssr
 .env
 .env.*
 !.env.example
+!.env.production
 
-# Hostinger secrets (upload manually)
+# Hostinger secrets (upload manually — never commit)
 public/api/config.php
+deploy/config.php
+dist/api/config.php
+hostinger-upload.zip
 
 # Local dev leads (npm run dev)
 server/data/leads.json

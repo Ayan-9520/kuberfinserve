@@ -20,7 +20,7 @@ function detectPlatform(): AppPlatform {
   return 'android'
 }
 
-function getAppConfig(target: AppTarget): AppConfig {
+function getAppConfig(target: AppTarget, params?: Record<string, string>): AppConfig {
   if (target === 'customer') {
     return {
       androidPackage: SITE.customerApp.androidPackage,
@@ -33,12 +33,13 @@ function getAppConfig(target: AppTarget): AppConfig {
     }
   }
 
+  const academy = params?.screen === 'academy'
   return {
     androidPackage: SITE.partnerApp.androidPackage,
     iosBundleId: SITE.partnerApp.iosBundleId,
-    androidDeepLink: SITE.partnerApp.androidDeepLink,
-    iosDeepLink: SITE.partnerApp.iosDeepLink,
-    universalPath: SITE.partnerApp.universalLoginPath,
+    androidDeepLink: academy ? 'kuberone://academy' : SITE.partnerApp.androidDeepLink,
+    iosDeepLink: academy ? 'kuberone://academy' : SITE.partnerApp.iosDeepLink,
+    universalPath: academy ? '/app/partner' : SITE.partnerApp.universalLoginPath,
     androidStoreUrl: SITE.partnerApp.androidStoreUrl,
     iosStoreUrl: SITE.partnerApp.iosStoreUrl,
   }
@@ -123,8 +124,9 @@ export function openMobileApp(
   const { platform: platformKey, ...restParams } = params ?? {}
   const linkParams = restParams
   void platformKey
-  const config = getAppConfig(target)
+  const config = getAppConfig(target, linkParams)
   const storeUrl = platform === 'ios' ? config.iosStoreUrl : config.androidStoreUrl
+  // Universal link for academy should include screen so /app/partner?screen=academy works
   const universalLink = buildUniversalLink(config, linkParams)
 
   if (platform === 'android') {
@@ -171,5 +173,5 @@ export function downloadMobileApp(target: AppTarget, platform?: AppPlatform): vo
 }
 
 export function buildAppUniversalUrl(target: AppTarget, params?: Record<string, string>): string {
-  return buildUniversalLink(getAppConfig(target), params)
+  return buildUniversalLink(getAppConfig(target, params), params)
 }

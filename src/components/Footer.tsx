@@ -100,6 +100,7 @@ const QUICK_LINKS = [
   { label: 'CIBIL Assistance', path: '/cibil' },
   { label: 'Apply Loan', path: '/apply-loan' },
   { label: 'Contact Us', path: '/contact-us' },
+  { label: 'Become Partner', path: SITE.becomePartnerUrl },
   { label: 'Partner Login', path: SITE.partnerLoginUrl },
 ] as const
 
@@ -280,6 +281,11 @@ export function Footer() {
                 <li className="flex justify-center sm:justify-start">
                   <FooterLink to={SITE.becomePartnerUrl} highlight centered>
                     Become Partner
+                  </FooterLink>
+                </li>
+                <li className="flex justify-center sm:justify-start">
+                  <FooterLink to={`${SITE.becomePartnerUrl}#academy`} centered>
+                    Partner Academy
                   </FooterLink>
                 </li>
                 {FOOTER_LINKS.legal.slice(0, 3).map((link) => (

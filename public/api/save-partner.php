@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 require __DIR__ . '/db.php';
+require __DIR__ . '/mailer.php';
 require __DIR__ . '/partner_helpers.php';
 require __DIR__ . '/partner_notify.php';
 require __DIR__ . '/kuberone_bridge.php';
@@ -130,6 +131,7 @@ try {
         'created_at' => date('Y-m-d H:i:s'),
     ];
 
+    // Emails: ① loanleads ② info (admins) + ③ applicant confirmation
     $adminSent = api_partner_notify_admin_new($partner, $config);
     $userSent = api_partner_notify_registration_received($partner, $config);
 
@@ -138,11 +140,19 @@ try {
         'source' => $source,
     ]));
 
+    $partnerCode = is_string($kuberone['partnerCode'] ?? null) ? $kuberone['partnerCode'] : null;
+
     api_json_response([
         'ok' => true,
         'id' => $partnerId,
         'status' => 'pending',
-        'message' => 'Application submitted successfully. You will receive a confirmation email shortly. Login will be available after approval.',
+        'partner_code' => $partnerCode,
+        'message' => 'Application submitted successfully. You will receive a confirmation email shortly. Our team will contact you within 48 hours.',
+        'emails' => [
+            'admin' => $adminSent,
+            'user' => $userSent,
+            'smtp_configured' => api_smtp_configured($config),
+        ],
         'notifications' => [
             'admin_email' => $adminSent,
             'user_email' => $userSent,
@@ -151,6 +161,7 @@ try {
             'synced' => (bool) ($kuberone['ok'] ?? false),
             'skipped' => (bool) ($kuberone['skipped'] ?? false),
             'duplicate' => (bool) ($kuberone['duplicate'] ?? false),
+            'partner_code' => $partnerCode,
             'error' => $kuberone['error'] ?? null,
         ],
     ]);

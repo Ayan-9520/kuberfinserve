@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
 import {
@@ -53,6 +53,8 @@ function validateIdentifier(raw: string): string | null {
 }
 
 export function PartnerLogin() {
+  const [searchParams] = useSearchParams()
+  const academyIntent = searchParams.get('intent') === 'academy'
   const [showPassword, setShowPassword] = useState(false)
   const [loginMode, setLoginMode] = useState<'otp' | 'password'>('otp')
   const [otpRequested, setOtpRequested] = useState(false)
@@ -71,12 +73,18 @@ export function PartnerLogin() {
   const inputClass =
     'w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 shadow-sm transition placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-[3px] focus:ring-brand-500/15'
 
-  const redirectToAppWithToken = (token: string, partnerId: string | null) => {
-    setRedirecting(true)
-    openMobileApp('partner', {
+  const appOpenParams = (token: string, partnerId: string | null) => {
+    const base: Record<string, string> = {
       token,
       partner_id: partnerId ?? '',
-    })
+    }
+    if (academyIntent) base.screen = 'academy'
+    return base
+  }
+
+  const redirectToAppWithToken = (token: string, partnerId: string | null) => {
+    setRedirecting(true)
+    openMobileApp('partner', appOpenParams(token, partnerId))
     window.setTimeout(() => setRedirecting(false), 2500)
   }
 
@@ -87,7 +95,7 @@ export function PartnerLogin() {
       redirectToAppWithToken(token, profile.partner_id)
       return
     }
-    openMobileApp('partner')
+    openMobileApp('partner', academyIntent ? { screen: 'academy' } : undefined)
   }
 
   const onPasswordLogin = async (data: LoginFormData) => {
@@ -125,7 +133,9 @@ export function PartnerLogin() {
 
     const successMessage = result.must_change_password
       ? 'Login successful. Please change your temporary password in the app.'
-      : 'Login successful. Opening KuberOne app…'
+      : academyIntent
+        ? 'Login successful. Opening Partner Academy in KuberOne…'
+        : 'Login successful. Opening KuberOne app…'
     setLoginSuccess(successMessage)
     showSuccess(successMessage)
 
@@ -211,7 +221,9 @@ export function PartnerLogin() {
     const codeHint = result.partner.partner_id
       ? ` Partner Code: ${result.partner.partner_id}.`
       : ''
-    const successMessage = `Login successful.${codeHint} Opening KuberOne app…`
+    const successMessage = academyIntent
+      ? `Login successful.${codeHint} Opening Partner Academy in KuberOne…`
+      : `Login successful.${codeHint} Opening KuberOne app…`
     setLoginSuccess(successMessage)
     showSuccess(successMessage)
     redirectToAppWithToken(result.token, result.partner.partner_id)
@@ -277,11 +289,24 @@ export function PartnerLogin() {
                 <PlatformLogo size="sm" showName={false} nameBelow={false} />
               </span>
               <h1 className="font-heading text-xl font-bold tracking-tight text-navy-900">
-                Partner Login
+                {academyIntent ? 'Login to Partner Academy' : 'Partner Login'}
               </h1>
               <p className="mt-1 text-[13px] text-slate-500">
-                {SITE.platformName} · OTP after Admin approval
+                {academyIntent
+                  ? 'After login, Academy opens in the KuberOne DSA app'
+                  : `${SITE.platformName} · Partner role · OTP after Admin approval`}
               </p>
+              {academyIntent ? (
+                <p className="mt-3 rounded-xl bg-brand-50 px-3 py-2 text-left text-[12px] leading-snug text-brand-900 ring-1 ring-brand-100">
+                  Website shows Academy overview only. Courses, dashboard and certificates unlock inside the
+                  app after this login. Employee / Admin / Lender use KuberOne Admin — not this page.
+                </p>
+              ) : (
+                <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-left text-[12px] leading-snug text-slate-600 ring-1 ring-slate-100">
+                  This login is for <strong className="font-semibold text-navy-900">Partner</strong> accounts.
+                  Employee, Admin, Lender and Sales Coordinator dashboards open in KuberOne Admin.
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleSubmit(onPasswordLogin)} className="space-y-3.5" noValidate>

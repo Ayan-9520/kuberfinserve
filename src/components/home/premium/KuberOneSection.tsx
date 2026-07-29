@@ -70,11 +70,12 @@ export function KuberOneSection() {
             Powered by {SITE.platformName}
           </span>
           <h2 className="mt-4 font-heading text-3xl font-bold text-navy-900 md:text-4xl lg:text-5xl">
-            {SITE.platformTagline}
+            Powered by {SITE.platformName}
           </h2>
+          <p className="mt-2 text-lg font-semibold text-brand-800 md:text-xl">{SITE.platformTagline}</p>
           <p className="mt-4 text-base leading-relaxed text-slate-600 md:text-lg">
-            The technology backbone that empowers financial professionals to build, manage &amp; scale
-            their own financial distribution business.
+            Manage customers, automate workflows, complete loan fulfillment, learn through Kuber Academy,
+            track weekly earnings, and grow your financial business from one intelligent platform.
           </p>
         </motion.div>
 

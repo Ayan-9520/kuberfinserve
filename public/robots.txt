@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
-
+Disallow: /api/
+Disallow: /partner-login
+Disallow: /partner-academy/app/
 Sitemap: https://kuberfinserve.com/sitemap.xml

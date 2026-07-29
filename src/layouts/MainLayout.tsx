@@ -22,7 +22,8 @@ export function MainLayout() {
   const isPartners =
     location.pathname === '/partners' ||
     location.pathname === '/become-partner' ||
-    location.pathname === '/partner-login'
+    location.pathname === '/partner-login' ||
+    location.pathname.startsWith('/partner-academy')
   const showConversionModals = isHome || isApplyLoan
   const hideMobileBar = isApplyLoan || isPartners
 

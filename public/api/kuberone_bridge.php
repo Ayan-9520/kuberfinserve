@@ -279,7 +279,16 @@ function api_kuberone_sync_partner(array $config, array $partner): array
     }
 
     $duplicate = (bool) ($result['body']['data']['duplicate'] ?? false);
-    return ['ok' => true, 'status' => $result['status'] ?? 201, 'duplicate' => $duplicate];
+    $partnerCode = $result['body']['data']['partner']['partnerCode']
+        ?? $result['body']['data']['partner']['partner_code']
+        ?? null;
+
+    return [
+        'ok' => true,
+        'status' => $result['status'] ?? 201,
+        'duplicate' => $duplicate,
+        'partnerCode' => is_string($partnerCode) ? $partnerCode : null,
+    ];
 }
 
 /**

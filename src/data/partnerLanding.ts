@@ -4,23 +4,23 @@
  */
 
 export const LANDING_SEO = {
-  title: 'Become a Kuber Partner | Build Your Own Financial Services Business',
+  title: 'Become a Financial Partner | Build Your Business | KuberFinserve',
   description:
-    'Stop building someone else\'s dream. Become an Independent Financial Partner with KuberFinserve — access banks & NBFCs, KuberOne technology, training & higher earning potential. Subject to agreement & eligibility.',
+    "Join India's AI-Powered Financial Distribution Network. Register, learn in Kuber Academy, run your business on KuberOne, and grow with weekly payouts — banks, NBFCs, certifications and AI tools included.",
   keywords:
-    'become kuber partner, financial services business, loan partner India, DSA alternative, KuberOne, independent financial partner, partner registration',
+    'become financial partner, financial entrepreneur India, partner academy, KuberOne operating system, loan fulfillment, weekly payouts, independent financial professional',
   path: '/become-partner',
 } as const
 
 export const HERO = {
-  eyebrow: 'Kuber Partner Program · Powered by KuberOne',
-  title: 'Build Your Own Financial Services Business',
-  subtitleLines: ['More Freedom.', 'More Income.', 'More Growth.'],
-  tagline: "Stop building someone else's dream. Build your own.",
-  lead: 'Become an Independent Financial Partner with KuberFinserve. Access India\'s leading Banks & NBFCs. Earn more. Work on your own terms. Scale without opening an office.',
-  primaryCta: 'Become a Kuber Partner',
-  secondaryCta: 'Talk to an Expert',
-  demoCta: 'Watch Demo',
+  eyebrow: 'Financial Partner Program · Powered by KuberOne',
+  title: 'Build Your Financial Business',
+  subtitleLines: ['Learn. Grow. Earn.', 'Own Your Customers.', 'Scale Your Network.'],
+  tagline: 'Become a financial entrepreneur — not just another job.',
+  lead: "Join KuberFinserve's nationwide partner ecosystem. Access banks & NBFCs, train in Kuber Academy, fulfill loans on KuberOne, and grow with weekly payouts — on your terms.",
+  primaryCta: 'Become a Partner',
+  secondaryCta: 'Explore KuberOne',
+  demoCta: 'Book a Demo',
 } as const
 
 /** Above-the-fold hooks — visible before long scroll */
@@ -38,25 +38,27 @@ export const HERO_EARNING = {
 } as const
 
 export const ATTRACTION_POINTS = [
-  { title: 'Own your business', desc: 'Not just a job — build equity in your financial practice.' },
-  { title: 'Keep more of every deal', desc: 'Higher partner share vs corporate salary layers.' },
-  { title: 'Technology included', desc: 'CRM, WhatsApp, wallet, training & creatives on KuberOne.' },
-  { title: 'Start part-time', desc: 'Side income first — scale to full-time when ready.' },
+  { title: 'Own your business', desc: 'Build equity in your financial practice — not just a salary role.' },
+  { title: 'Increase your revenue', desc: 'Higher partner share with transparent weekly payouts.' },
+  { title: 'Technology included', desc: 'Loan fulfillment, wallet, Academy & AI tools on KuberOne.' },
+  { title: 'Start part-time', desc: 'Grow your network first — scale to full-time when ready.' },
 ] as const
 
 export const PAGE_JUMPS = [
-  { label: 'Earnings', href: '#earnings-hook' },
-  { label: 'Why Switch', href: '#why-switch' },
-  { label: 'Compare Model', href: '#model-compare' },
-  { label: 'Ranks', href: '#ranking' },
-  { label: 'KuberOne', href: '#kuberone' },
-  { label: 'Apply Now', href: '#apply' },
+  { label: 'Why Join', href: '#why-kuber' },
+  { label: 'Income', href: '#earnings-hook' },
+  { label: 'Plans', href: '#partner-plans' },
+  { label: 'Products', href: '#products' },
+  { label: 'KuberOne', href: '#crm-features' },
+  { label: 'Academy', href: '#academy' },
+  { label: 'Starter Kit', href: '#starter-kit' },
+  { label: 'Register', href: '#apply' },
 ] as const
 
 export const SWITCHING = {
-  title: 'Why Thousands of Professionals Want Their Own Business',
+  title: 'Why Professionals Choose to Build Their Own Financial Business',
   corporate: {
-    title: 'Corporate Job',
+    title: 'Traditional Job',
     points: [
       'Fixed Salary',
       'Limited Growth',
@@ -66,16 +68,16 @@ export const SWITCHING = {
     ],
   },
   partner: {
-    title: 'Kuber Partner',
+    title: 'Kuber Financial Partner',
     points: [
-      'Own Business',
-      'Higher Income Potential',
+      'Own Your Business',
+      'Higher Revenue Potential',
       'Flexible Work',
-      'Unlimited Growth',
+      'Expand Your Network',
       'Multiple Lenders',
     ],
   },
-  cta: 'Become Independent Today',
+  cta: 'Become a Financial Entrepreneur',
 } as const
 
 export const MODEL_COMPARE = {

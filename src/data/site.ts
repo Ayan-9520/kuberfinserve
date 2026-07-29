@@ -1,9 +1,9 @@
 export const SITE = {
   name: 'KuberFinserve',
-  tagline: 'Build Your Financial Business. From Anywhere.',
+  tagline: "India's AI-Powered Financial Distribution Network",
   platformName: 'KuberOne',
-  platformTagline: "India's Financial Distribution Operating System",
-  usp: "More Than a Job. It's Your Business.",
+  platformTagline: 'The AI-Powered Operating System for Financial Professionals',
+  usp: 'Build Your Financial Business. Powered by AI. Driven by You.',
   phone: '+91 7982953129',
   landline: '011 4752 1261',
   email: 'info@kuberfinserve.com',
@@ -25,6 +25,8 @@ export const SITE = {
   partnersUrl: '/become-partner',
   becomePartnerUrl: '/become-partner',
   partnerLoginUrl: '/partner-login',
+  /** Legacy Academy URL redirects here — Academy is a Become Partner section + in-app dashboard */
+  partnerAcademyUrl: '/become-partner#academy',
   applyLoanUrl: '/apply-loan',
   appBaseUrl: 'https://kuberfinserve.com',
   partnerApp: {
@@ -99,6 +101,9 @@ export const FOOTER_LINKS = {
     { label: 'Privacy Policy', path: '/privacy-policy' },
     { label: 'Terms & Conditions', path: '/terms-conditions' },
     { label: 'Channel Partner Agreement', path: '/channel-partner-agreement' },
+    { label: 'Refund Policy', path: '/refund-policy' },
+    { label: 'Grievance Redressal', path: '/grievance-redressal' },
+    { label: 'Regulatory Disclosure', path: '/regulatory-disclosure' },
     { label: 'Make Payment', path: '/contact-us' },
   ],
   loans: LOAN_NAV,

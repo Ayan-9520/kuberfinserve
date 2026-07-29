@@ -32,16 +32,21 @@ Confirm tables: `leads`, `partners`, `partner_audit_log`, `website_visitors`
 
 ---
 
-## Step 2 — Local build
+## Step 2 — Local build (Hostinger-ready)
 
 PC pe `kuberfinserve` folder:
 
 ```bash
 npm install
-npm run build
+# Optional: copy your live Hostinger config.php → deploy/config.php (unchanged)
+npm run build:hostinger
 ```
 
-`dist/` folder banega. Vite `public/` (api, logos, .htaccess) ko `dist/` me copy karta hai.
+Ya sirf frontend: `npm run build`
+
+`dist/` banega — Vite `public/` (api, logos, `.htaccess`) copy karta hai.
+
+**Config rule:** `deploy/config.php` agar hai to **as-is** `dist/api/config.php` me copy hota hai — build usko edit nahi karta. Agar nahi hai, Hostinger pe purani `api/config.php` mat mitao.
 
 ---
 

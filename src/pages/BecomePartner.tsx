@@ -21,12 +21,25 @@ import {
   WhyKuberSection,
   WhySwitchingSection,
 } from '@/components/partners/landing/PartnerLandingSections'
+import {
+  AiAssistantPreviewSection,
+  BookDemoSection,
+  CertificationProgramSection,
+  CrmFeaturesPreviewSection,
+  DashboardPreviewSection,
+  MarketingToolkitPreviewSection,
+  PartnerAcademyPreviewBlock,
+  PartnerOnboardingFunnelSection,
+  PartnerPlansSection,
+  ProductsYouOfferSection,
+  StarterKitSection,
+} from '@/components/partners/landing/PartnerEcosystemSections'
 import { PartnerAppCta } from '@/components/PartnerAppCta'
 import { LANDING_FAQ, LANDING_SEO } from '@/data/partnerLanding'
 
 /**
- * Conversion-first partner landing.
- * Order: attract → prove earnings → compare → platform → apply again → close.
+ * Unified Partner ecosystem landing.
+ * Academy / CRM / toolkit are preview sections — full access after Partner Login in KuberOne.
  */
 export function BecomePartner() {
   const location = useLocation()
@@ -62,28 +75,45 @@ export function BecomePartner() {
       />
       <JsonLd id="jsonld-become-partner-faq" data={faqPageSchema} />
 
-      {/* 1. Attraction + form above the fold */}
+      {/* Hero · Register */}
       <PartnerLandingHero />
       <PartnerJumpNav />
 
-      {/* 2. Quick reasons + earnings hook (before long compare) */}
+      {/* Why join · Income */}
       <AttractionStripSection />
       <EarningsHookSection />
-
-      {/* 3. Deeper persuasion */}
       <WhySwitchingSection />
       <ModelComparisonSection />
       <WhyKuberSection />
       <RealIncomeSection />
       <WhyEarnMoreSection />
+
+      {/* Plans · Products · Journey */}
+      <PartnerPlansSection />
+      <ProductsYouOfferSection />
+      <PartnerOnboardingFunnelSection />
       <JourneyTimelineSection />
       <RankingRewardsSection />
+
+      {/* Technology · CRM */}
       <KuberOnePlatformSection />
       <TechWorkflowSection />
+      <CrmFeaturesPreviewSection />
+
+      {/* Academy ecosystem (merged — no separate public Academy page) */}
+      <PartnerAcademyPreviewBlock />
+      <CertificationProgramSection />
+      <MarketingToolkitPreviewSection />
+      <AiAssistantPreviewSection />
+      <DashboardPreviewSection />
+
+      {/* Social proof · FAQ */}
       <PartnerSuccessSection />
       <PartnerFaqSection />
 
-      {/* 4. Catch scrollers who want to connect at the end */}
+      {/* Convert */}
+      <StarterKitSection />
+      <BookDemoSection />
       <BottomApplySection />
       <PartnerAppCta />
       <FinalCtaSection />

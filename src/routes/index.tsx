@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Navigate, Routes, Route } from 'react-router-dom'
 import { MainLayout } from '@/layouts/MainLayout'
 import { PageSkeleton } from '@/components/SkeletonLoader'
 
@@ -26,6 +26,11 @@ const BecomePartner = lazy(() =>
 const PartnerLogin = lazy(() =>
   import('@/pages/PartnerLogin').then((m) => ({ default: m.PartnerLogin })),
 )
+const PartnerAcademyRedirect = lazy(() =>
+  import('@/pages/academy/PartnerAcademyRedirect').then((m) => ({
+    default: m.PartnerAcademyRedirect,
+  })),
+)
 const AppOpen = lazy(() => import('@/pages/AppOpen').then((m) => ({ default: m.AppOpen })))
 const LegalDisclaimer = lazy(() =>
   import('@/pages/Legal').then((m) => ({ default: m.Disclaimer })),
@@ -39,6 +44,15 @@ const LegalTerms = lazy(() =>
 const LegalChannel = lazy(() =>
   import('@/pages/Legal').then((m) => ({ default: m.ChannelPartner })),
 )
+const RefundCancellationPolicy = lazy(() =>
+  import('@/pages/Regulatory').then((m) => ({ default: m.RefundCancellationPolicy })),
+)
+const GrievanceRedressal = lazy(() =>
+  import('@/pages/Regulatory').then((m) => ({ default: m.GrievanceRedressal })),
+)
+const RegulatoryDisclosure = lazy(() =>
+  import('@/pages/Regulatory').then((m) => ({ default: m.RegulatoryDisclosure })),
+)
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
 const SuccessStoriesPage = lazy(() =>
   import('@/pages/SuccessStories').then((m) => ({ default: m.SuccessStoriesPage })),
@@ -46,6 +60,11 @@ const SuccessStoriesPage = lazy(() =>
 
 function LazyWrap({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
+}
+
+/** Old website Academy dashboard URLs → Partner Login (DSA app only) */
+function AcademyAppRedirect() {
+  return <Navigate to="/partner-login?intent=academy" replace />
 }
 
 export function AppRoutes() {
@@ -56,6 +75,8 @@ export function AppRoutes() {
         <Route path="partners" element={<LazyWrap><Partners /></LazyWrap>} />
         <Route path="become-partner" element={<LazyWrap><BecomePartner /></LazyWrap>} />
         <Route path="partner-login" element={<LazyWrap><PartnerLogin /></LazyWrap>} />
+        <Route path="partner-academy" element={<LazyWrap><PartnerAcademyRedirect /></LazyWrap>} />
+        <Route path="partner-academy/app/*" element={<AcademyAppRedirect />} />
         <Route path="app/partner" element={<LazyWrap><AppOpen /></LazyWrap>} />
         <Route path="app/customer" element={<LazyWrap><AppOpen /></LazyWrap>} />
         <Route path="app/open" element={<LazyWrap><AppOpen /></LazyWrap>} />
@@ -73,6 +94,9 @@ export function AppRoutes() {
         <Route path="terms-conditions" element={<LazyWrap><LegalTerms /></LazyWrap>} />
         <Route path="success-stories" element={<LazyWrap><SuccessStoriesPage /></LazyWrap>} />
         <Route path="channel-partner-agreement" element={<LazyWrap><LegalChannel /></LazyWrap>} />
+        <Route path="refund-policy" element={<LazyWrap><RefundCancellationPolicy /></LazyWrap>} />
+        <Route path="grievance-redressal" element={<LazyWrap><GrievanceRedressal /></LazyWrap>} />
+        <Route path="regulatory-disclosure" element={<LazyWrap><RegulatoryDisclosure /></LazyWrap>} />
         <Route path="*" element={<LazyWrap><NotFound /></LazyWrap>} />
       </Route>
     </Routes>

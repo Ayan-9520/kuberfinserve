@@ -230,38 +230,25 @@ export interface PartnerApplyFormData {
 export async function submitPartnerApply(
   data: PartnerApplyFormData,
   source: string,
-): Promise<{ ok: boolean; error?: string; warning?: string; id?: number }> {
+): Promise<{
+  ok: boolean
+  error?: string
+  warning?: string
+  id?: number
+  partnerCode?: string
+  message?: string
+}> {
+  // Never fall back to loan-lead pipeline — that hides applications from Admin → Partners.
   const partnerResult = await registerPartnerApplication(data, source)
 
   if (partnerResult.ok) {
-    return { ok: true, warning: partnerResult.warning, id: partnerResult.id }
-  }
-
-  // Fallback to generic lead pipeline if dedicated partner API unavailable
-  if (
-    partnerResult.error &&
-    !partnerResult.error.includes('already') &&
-    !partnerResult.error.includes('duplicate') &&
-    !partnerResult.error.includes('pending')
-  ) {
-    return submitWithFallback(
-      'Partner Application',
-      source,
-      {
-        name: data.name,
-        phone: normalizePhone(data.phone),
-        email: data.email,
-        city: data.city,
-        state: data.state,
-        company_name: data.companyName,
-        business_type: data.businessType,
-        role: data.businessType,
-        experience: data.experience,
-        message: data.message,
-        form_variant: 'partners-landing',
-      },
-      data.email || `${normalizePhone(data.phone)}@partners.kuberfinserve.local`,
-    )
+    return {
+      ok: true,
+      warning: partnerResult.warning,
+      id: partnerResult.id,
+      partnerCode: partnerResult.partnerCode,
+      message: partnerResult.message,
+    }
   }
 
   return { ok: false, error: partnerResult.error }

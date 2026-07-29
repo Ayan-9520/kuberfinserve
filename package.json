@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n vite,api -c green,cyan \"vite\" \"node server/lead-api.mjs\"",
+    "dev": "concurrently -n vite,api -c green,cyan --restart-tries 10 --restart-after 1500 \"vite\" \"node server/lead-api.mjs\"",
     "dev:web": "vite",
     "api": "node server/lead-api.mjs",
     "build": "tsc -b && vite build",
+    "build:hostinger": "node scripts/prepare-hostinger.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

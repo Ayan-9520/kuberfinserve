@@ -15,25 +15,25 @@ export function LeadCta() {
           className="mx-auto max-w-3xl text-center"
         >
           <h2 className="font-heading text-3xl font-bold text-navy-900 md:text-4xl">
-            Ready To Find Your Perfect Financial Solution?
+            Ready to Build Your Financial Business?
           </h2>
           <p className="mt-4 text-lg text-slate-600">
-            AI-powered matching, 50+ lenders &amp; expert guidance — get funded faster with
-            KuberFinserve.
+            Join India&apos;s AI-Powered Financial Distribution Network — technology, training,
+            bank access and weekly payouts on KuberOne.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
-              to={SITE.applyLoanUrl}
+              to={SITE.becomePartnerUrl}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-700 to-brand-500 px-8 py-4 text-base font-bold text-white shadow-lg shadow-brand-600/25 transition-transform hover:scale-[1.02]"
             >
-              Apply Now
+              Become a Partner
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
-              to={SITE.partnersUrl}
+              to={SITE.applyLoanUrl}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-8 py-4 text-base font-semibold text-navy-800 shadow-sm transition-colors hover:border-brand-300 hover:bg-brand-50"
             >
-              Become Partner
+              Explore Loan Solutions
             </Link>
           </div>
         </motion.div>

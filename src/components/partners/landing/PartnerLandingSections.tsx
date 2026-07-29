@@ -258,6 +258,12 @@ export function PartnerLandingHero() {
                 {HERO.primaryCta}
                 <ArrowRight className="h-4 w-4" />
               </a>
+              <Link
+                to={`${SITE.partnerLoginUrl}?intent=academy`}
+                className="inline-flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-5 py-3 text-sm font-bold text-brand-800 shadow-sm hover:bg-brand-100"
+              >
+                Login & Start Academy
+              </Link>
               <a
                 href={whatsappPartner}
                 target="_blank"

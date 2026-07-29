@@ -2,7 +2,7 @@
   RewriteEngine On
   RewriteBase /
 
-  # API / PHP / universal links — do not rewrite to index.html
+  # API / PHP / universal links - do not rewrite to index.html
   RewriteRule ^api/ - [L]
   RewriteRule ^\.well-known/ - [L]
   RewriteRule ^send-lead\.php$ - [L]
