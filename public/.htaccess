@@ -7,6 +7,10 @@
   RewriteRule ^\.well-known/ - [L]
   RewriteRule ^send-lead\.php$ - [L]
 
+  # Old website login called openMobileApp → /app/partner?token=…
+  # Hand off to Partner web dashboard (SSO) instead of native-app intent.
+  RewriteRule ^app/partner/?$ /api/partner-sso-handoff.php [L,QSA]
+
   # React SPA
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f

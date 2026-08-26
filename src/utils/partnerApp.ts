@@ -110,20 +110,47 @@ function navigateWithStoreFallback(primaryUrl: string, storeUrl: string): void {
 }
 
 /**
+ * After website OTP/password login: open Partner web dashboard with SSO (desktop + mobile browser).
+ * Native store/intent deep-links are only used when there is no session token.
+ */
+function openPartnerWebPortal(params?: Record<string, string>): void {
+  const token = (params?.access_token || params?.token || '').trim()
+  if (!token) return
+
+  const q = new URLSearchParams()
+  q.set('access_token', token)
+  q.set('token', token)
+  if (params?.refresh_token) q.set('refresh_token', params.refresh_token)
+  if (params?.partner_id) q.set('partner_id', params.partner_id)
+  if (params?.screen) q.set('screen', params.screen)
+
+  const portal = SITE.partnerPortalUrl.replace(/\/$/, '')
+  window.location.replace(`${portal}/login#${q.toString()}`)
+}
+
+/**
  * Opens partner (KuberOne) or customer app via universal link → custom scheme → store.
+ * Partner + login token → always SSO into partner.kuberone.online (website login must open dashboard).
  */
 export function openMobileApp(
   target: AppTarget = 'partner',
   params?: Record<string, string>,
 ): void {
+  const { platform: platformKey, ...restParams } = params ?? {}
+  const linkParams = restParams
+  void platformKey
+
+  // Website partner login success always carries token — open web dashboard, not Play Store / intent.
+  if (target === 'partner' && (linkParams.access_token || linkParams.token)) {
+    openPartnerWebPortal(linkParams)
+    return
+  }
+
   const platform =
     params?.platform === 'ios' || params?.platform === 'android'
       ? params.platform
       : detectPlatform()
 
-  const { platform: platformKey, ...restParams } = params ?? {}
-  const linkParams = restParams
-  void platformKey
   const config = getAppConfig(target, linkParams)
   const storeUrl = platform === 'ios' ? config.iosStoreUrl : config.androidStoreUrl
   // Universal link for academy should include screen so /app/partner?screen=academy works
