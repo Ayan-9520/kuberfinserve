@@ -31,6 +31,10 @@ export interface PartnerLoginResult {
   must_change_password?: boolean
   otp_sent?: boolean
   message?: string
+  phone_hint?: string
+  email_hint?: string
+  email_sent?: boolean
+  dev_otp?: string
 }
 
 function getPartnerApiBase(): string {
@@ -177,6 +181,10 @@ export async function loginPartner(params: {
       must_change_password: json.must_change_password as boolean | undefined,
       otp_sent: json.otp_sent as boolean | undefined,
       message: json.message as string | undefined,
+      phone_hint: json.phone_hint as string | undefined,
+      email_hint: json.email_hint as string | undefined,
+      email_sent: json.email_sent as boolean | undefined,
+      dev_otp: json.dev_otp as string | undefined,
     }
   } catch {
     return { ok: false, error: 'Network error. Check internet or try again later.' }

@@ -183,11 +183,17 @@ export function PartnerLogin() {
     }
 
     setOtpRequested(true)
+    const parts: string[] = []
+    if (result.phone_hint) parts.push(`mobile ${result.phone_hint}`)
+    if (result.email_sent && result.email_hint) parts.push(`email ${result.email_hint}`)
+    const where =
+      parts.length > 0
+        ? `OTP sent to ${parts.join(' and ')}.`
+        : result.message ?? 'OTP sent to your registered mobile.'
     const otpMessage =
-      result.message ??
-      (import.meta.env.DEV
-        ? 'OTP sent. Local/dev OTP is 123456.'
-        : 'OTP sent to your registered mobile number.')
+      import.meta.env.DEV || result.dev_otp
+        ? `${where} Dev OTP: ${result.dev_otp ?? '123456'}.`
+        : where
     setLoginSuccess(otpMessage)
     showSuccess(otpMessage)
   }
@@ -400,8 +406,9 @@ export function PartnerLogin() {
                     className={cn(inputClass, 'tracking-[0.2em]')}
                   />
                   <p className="mt-1.5 text-[11px] text-slate-400">
-                    Sent to your registered mobile
+                    OTP goes to the partner&apos;s registered mobile
                     {import.meta.env.DEV ? ' · Dev OTP: 123456' : ''}
+                    {' '}(and email when SMTP is configured). SMS gateway comes later.
                   </p>
                 </div>
               )}

@@ -47,6 +47,9 @@ if (
             'message' => $kAuth['message'] ?? 'OTP sent.',
             'otp_sent' => true,
             'phone_hint' => $kAuth['phone_hint'] ?? null,
+            'email_hint' => $kAuth['email_hint'] ?? null,
+            'email_sent' => (bool) ($kAuth['email_sent'] ?? false),
+            'dev_otp' => $kAuth['dev_otp'] ?? null,
             'auth_via' => 'kuberone',
         ]);
     } else {

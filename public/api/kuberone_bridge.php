@@ -333,6 +333,9 @@ function api_kuberone_partner_otp(array $config, string $mode, string $identifie
             'otp_sent' => true,
             'message' => $data['message'] ?? 'OTP sent to your registered mobile number.',
             'phone_hint' => $data['phone_hint'] ?? null,
+            'email_hint' => $data['email_hint'] ?? null,
+            'email_sent' => (bool) ($data['email_sent'] ?? false),
+            'dev_otp' => $data['dev_otp'] ?? null,
         ];
     }
 
