@@ -34,6 +34,7 @@ export interface PartnerLoginResult {
   phone_hint?: string
   email_hint?: string
   email_sent?: boolean
+  phone_bypass_otp?: string
   dev_otp?: string
 }
 
@@ -184,7 +185,8 @@ export async function loginPartner(params: {
       phone_hint: json.phone_hint as string | undefined,
       email_hint: json.email_hint as string | undefined,
       email_sent: json.email_sent as boolean | undefined,
-      dev_otp: json.dev_otp as string | undefined,
+      phone_bypass_otp: json.phone_bypass_otp as string | undefined,
+      dev_otp: (json.phone_bypass_otp as string | undefined) || (json.dev_otp as string | undefined),
     }
   } catch {
     return { ok: false, error: 'Network error. Check internet or try again later.' }

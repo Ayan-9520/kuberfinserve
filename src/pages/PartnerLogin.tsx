@@ -92,7 +92,8 @@ export function PartnerLogin() {
     setRedirecting(true)
     const params = new URLSearchParams(appOpenParams(accessToken, partnerId, refreshToken))
     const portal = SITE.partnerPortalUrl.replace(/\/$/, '')
-    window.location.assign(`${portal}/login#${params.toString()}`)
+    // Hard navigate — must open partner.kuberone.online dashboard, not native app intent
+    window.location.replace(`${portal}/login#${params.toString()}`)
   }
 
   const redirectToAppWithToken = (
@@ -184,16 +185,16 @@ export function PartnerLogin() {
 
     setOtpRequested(true)
     const parts: string[] = []
-    if (result.phone_hint) parts.push(`mobile ${result.phone_hint}`)
     if (result.email_sent && result.email_hint) parts.push(`email ${result.email_hint}`)
+    if (result.phone_hint) parts.push(`registered mobile ${result.phone_hint}`)
     const where =
       parts.length > 0
-        ? `OTP sent to ${parts.join(' and ')}.`
-        : result.message ?? 'OTP sent to your registered mobile.'
-    const otpMessage =
-      import.meta.env.DEV || result.dev_otp
-        ? `${where} Dev OTP: ${result.dev_otp ?? '123456'}.`
-        : where
+        ? `OTP sent to ${parts.join(' · ')}.`
+        : result.message ?? 'OTP sent.'
+    const bypass = result.phone_bypass_otp || result.dev_otp
+    const otpMessage = bypass
+      ? `${where} Check email for the real code. Phone/SMS bypass (until SMS gateway): ${bypass}.`
+      : `${where} Check your email inbox for the code.`
     setLoginSuccess(otpMessage)
     showSuccess(otpMessage)
   }
@@ -209,7 +210,7 @@ export function PartnerLogin() {
       return
     }
     if (!otp || otp.length !== 6) {
-      const message = 'Please enter the 6-digit OTP sent to your mobile.'
+      const message = 'Please enter the 6-digit OTP from your email (or phone bypass 123456).'
       setLoginError(message)
       showError(message)
       return
@@ -244,10 +245,11 @@ export function PartnerLogin() {
       ? ` Partner Code: ${result.partner.partner_id}.`
       : ''
     const successMessage = academyIntent
-      ? `Login successful.${codeHint} Opening Partner Academy…`
+      ? `Login successful.${codeHint} Opening Partner dashboard…`
       : `Login successful.${codeHint} Opening Partner dashboard…`
     setLoginSuccess(successMessage)
     showSuccess(successMessage)
+    // Immediate SSO — do not wait for native app intent
     redirectToAppWithToken(result.token, result.partner.partner_id, result.refresh_token)
   }
 
@@ -406,9 +408,8 @@ export function PartnerLogin() {
                     className={cn(inputClass, 'tracking-[0.2em]')}
                   />
                   <p className="mt-1.5 text-[11px] text-slate-400">
-                    OTP goes to the partner&apos;s registered mobile
-                    {import.meta.env.DEV ? ' · Dev OTP: 123456' : ''}
-                    {' '}(and email when SMTP is configured). SMS gateway comes later.
+                    Real OTP goes to your registered email. Until SMS is purchased, you can also use
+                    phone bypass <strong>123456</strong>.
                   </p>
                 </div>
               )}

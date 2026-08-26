@@ -335,7 +335,8 @@ function api_kuberone_partner_otp(array $config, string $mode, string $identifie
             'phone_hint' => $data['phone_hint'] ?? null,
             'email_hint' => $data['email_hint'] ?? null,
             'email_sent' => (bool) ($data['email_sent'] ?? false),
-            'dev_otp' => $data['dev_otp'] ?? null,
+            'phone_bypass_otp' => $data['phone_bypass_otp'] ?? null,
+            'dev_otp' => $data['phone_bypass_otp'] ?? null,
         ];
     }
 
