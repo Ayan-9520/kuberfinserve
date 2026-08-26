@@ -53,6 +53,7 @@ if (
         api_json_response([
             'ok' => true,
             'token' => $kAuth['token'],
+            'refresh_token' => $kAuth['refresh_token'] ?? null,
             'partner' => $kAuth['partner'],
             'must_change_password' => (bool) ($kAuth['must_change_password'] ?? false),
             'auth_via' => 'kuberone',

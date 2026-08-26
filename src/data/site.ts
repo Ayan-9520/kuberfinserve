@@ -25,6 +25,8 @@ export const SITE = {
   partnersUrl: '/become-partner',
   becomePartnerUrl: '/become-partner',
   partnerLoginUrl: '/partner-login',
+  /** Live Partner web app (SSO after website OTP) */
+  partnerPortalUrl: 'https://partner.kuberone.online',
   /** Legacy Academy URL redirects here — Academy is a Become Partner section + in-app dashboard */
   partnerAcademyUrl: '/become-partner#academy',
   applyLoanUrl: '/apply-loan',

@@ -295,7 +295,7 @@ function api_kuberone_sync_partner(array $config, array $partner): array
  * Partner OTP login via KuberOne public website partner-auth endpoint.
  * Accepts mobile, email, or Partner Code; OTP is sent to registered mobile.
  *
- * @return array{ok:bool, skipped?:bool, token?:string, partner?:array, error?:string, otp_sent?:bool, message?:string, must_change_password?:bool, phone_hint?:string}
+ * @return array{ok:bool, skipped?:bool, token?:string, refresh_token?:string|null, partner?:array, error?:string, otp_sent?:bool, message?:string, must_change_password?:bool, phone_hint?:string}
  */
 function api_kuberone_partner_otp(array $config, string $mode, string $identifier, ?string $otp = null): array
 {
@@ -358,6 +358,7 @@ function api_kuberone_partner_otp(array $config, string $mode, string $identifie
         return [
             'ok' => true,
             'token' => $accessToken,
+            'refresh_token' => is_string($data['refreshToken'] ?? null) ? $data['refreshToken'] : null,
             'partner' => $partner,
             'must_change_password' => (bool) ($data['must_change_password'] ?? false),
         ];

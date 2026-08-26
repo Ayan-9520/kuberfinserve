@@ -16,7 +16,6 @@ import { PARTNER_LOGIN_SEO } from '@/data/partners'
 import { SeoHead } from '@/components/SeoHead'
 import { JsonLd } from '@/components/JsonLd'
 import { useToast } from '@/components/ui/Toast'
-import { openMobileApp } from '@/utils/partnerApp'
 import { loginPartner } from '@/utils/submitPartnerApi'
 import { getPartnerToken, getPartnerProfile, savePartnerSession } from '@/utils/partnerAuth'
 import { PlatformLogo } from '@/components/PlatformLogo'
@@ -29,7 +28,7 @@ interface LoginFormData {
 }
 
 function validateIdentifier(raw: string): string | null {
-  const identifier = raw.trim()
+  const identifier = raw.trim().replace(/\.+$/, '').trim()
   if (!identifier) return 'Mobile, email, or Partner Code is required'
 
   if (identifier.includes('@')) {
@@ -73,29 +72,46 @@ export function PartnerLogin() {
   const inputClass =
     'w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-navy-900 shadow-sm transition placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-[3px] focus:ring-brand-500/15'
 
-  const appOpenParams = (token: string, partnerId: string | null) => {
+  const appOpenParams = (token: string, partnerId: string | null, refreshToken?: string | null) => {
     const base: Record<string, string> = {
+      access_token: token,
       token,
       partner_id: partnerId ?? '',
     }
+    if (refreshToken) base.refresh_token = refreshToken
     if (academyIntent) base.screen = 'academy'
     return base
   }
 
-  const redirectToAppWithToken = (token: string, partnerId: string | null) => {
+  /** After website OTP: open Partner web dashboard already logged in (no second OTP). */
+  const redirectToPartnerPortalSso = (
+    accessToken: string,
+    refreshToken: string | null | undefined,
+    partnerId: string | null,
+  ) => {
     setRedirecting(true)
-    openMobileApp('partner', appOpenParams(token, partnerId))
-    window.setTimeout(() => setRedirecting(false), 2500)
+    const params = new URLSearchParams(appOpenParams(accessToken, partnerId, refreshToken))
+    const portal = SITE.partnerPortalUrl.replace(/\/$/, '')
+    window.location.assign(`${portal}/login#${params.toString()}`)
+  }
+
+  const redirectToAppWithToken = (
+    token: string,
+    partnerId: string | null,
+    refreshToken?: string | null,
+  ) => {
+    // Desktop / any browser: SSO into partner.kuberone.online dashboard
+    redirectToPartnerPortalSso(token, refreshToken, partnerId)
   }
 
   const handleOpenApp = () => {
     const token = getPartnerToken()
     const profile = getPartnerProfile()
     if (token && profile?.partner_id) {
-      redirectToAppWithToken(token, profile.partner_id)
+      redirectToPartnerPortalSso(token, null, profile.partner_id)
       return
     }
-    openMobileApp('partner', academyIntent ? { screen: 'academy' } : undefined)
+    window.location.assign(`${SITE.partnerPortalUrl.replace(/\/$/, '')}/login`)
   }
 
   const onPasswordLogin = async (data: LoginFormData) => {
@@ -110,7 +126,7 @@ export function PartnerLogin() {
     }
 
     const result = await loginPartner({
-      identifier: data.identifier.trim(),
+      identifier: data.identifier.trim().replace(/\.+$/, ''),
       password: data.password,
       mode: 'password',
     })
@@ -134,12 +150,12 @@ export function PartnerLogin() {
     const successMessage = result.must_change_password
       ? 'Login successful. Please change your temporary password in the app.'
       : academyIntent
-        ? 'Login successful. Opening Partner Academy in KuberOne…'
-        : 'Login successful. Opening KuberOne app…'
+        ? 'Login successful. Opening Partner Academy…'
+        : 'Login successful. Opening Partner dashboard…'
     setLoginSuccess(successMessage)
     showSuccess(successMessage)
 
-    redirectToAppWithToken(result.token, result.partner.partner_id)
+    redirectToAppWithToken(result.token, result.partner.partner_id, result.refresh_token)
   }
 
   const onRequestOtp = async () => {
@@ -155,7 +171,7 @@ export function PartnerLogin() {
     setLoginSuccess(null)
 
     const result = await loginPartner({
-      identifier: identifier!,
+      identifier: identifier!.replace(/\.+$/, ''),
       mode: 'otp_request',
     })
 
@@ -197,7 +213,7 @@ export function PartnerLogin() {
     setLoginSuccess(null)
 
     const result = await loginPartner({
-      identifier: identifier!,
+      identifier: identifier!.replace(/\.+$/, ''),
       otp,
       mode: 'otp',
     })
@@ -222,11 +238,11 @@ export function PartnerLogin() {
       ? ` Partner Code: ${result.partner.partner_id}.`
       : ''
     const successMessage = academyIntent
-      ? `Login successful.${codeHint} Opening Partner Academy in KuberOne…`
-      : `Login successful.${codeHint} Opening KuberOne app…`
+      ? `Login successful.${codeHint} Opening Partner Academy…`
+      : `Login successful.${codeHint} Opening Partner dashboard…`
     setLoginSuccess(successMessage)
     showSuccess(successMessage)
-    redirectToAppWithToken(result.token, result.partner.partner_id)
+    redirectToAppWithToken(result.token, result.partner.partner_id, result.refresh_token)
   }
 
   const handleForgotPassword = () => {
@@ -404,7 +420,7 @@ export function PartnerLogin() {
 
               {redirecting && (
                 <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
-                  Opening {SITE.platformName} app…
+                  Opening Partner dashboard…
                 </p>
               )}
 
@@ -458,7 +474,7 @@ export function PartnerLogin() {
                   className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-brand-700 hover:text-brand-900"
                 >
                   <Smartphone className="h-3.5 w-3.5" />
-                  Open app
+                  Open Partner Portal
                 </button>
               </div>
             </form>

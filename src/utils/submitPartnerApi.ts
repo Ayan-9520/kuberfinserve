@@ -15,6 +15,7 @@ export interface PartnerLoginResult {
   ok: boolean
   error?: string
   token?: string
+  refresh_token?: string
   partner?: {
     id: number
     partner_id: string | null
@@ -171,6 +172,7 @@ export async function loginPartner(params: {
     return {
       ok: true,
       token: json.token as string | undefined,
+      refresh_token: (json.refresh_token as string | undefined) || undefined,
       partner: json.partner as PartnerLoginResult['partner'],
       must_change_password: json.must_change_password as boolean | undefined,
       otp_sent: json.otp_sent as boolean | undefined,
