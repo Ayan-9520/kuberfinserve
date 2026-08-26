@@ -74,8 +74,9 @@ function api_kuberone_request(array $config, string $method, string $path, array
             CURLOPT_CUSTOMREQUEST => $methodUpper,
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 8,
-            CURLOPT_CONNECTTIMEOUT => 4,
+            // Partner OTP emails SMTP can take >8s; keep headroom so Hostinger does not abort.
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 8,
         ];
         if ($sendBody) {
             $opts[CURLOPT_POSTFIELDS] = $body;
@@ -102,7 +103,7 @@ function api_kuberone_request(array $config, string $method, string $path, array
     $http = [
         'method' => $methodUpper,
         'header' => implode("\r\n", $headers),
-        'timeout' => 8,
+        'timeout' => 30,
         'ignore_errors' => true,
     ];
     if ($sendBody) {
