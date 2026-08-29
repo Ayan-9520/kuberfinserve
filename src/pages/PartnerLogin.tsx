@@ -57,6 +57,7 @@ export function PartnerLogin() {
   const [showPassword, setShowPassword] = useState(false)
   const [loginMode, setLoginMode] = useState<'otp' | 'password'>('otp')
   const [otpRequested, setOtpRequested] = useState(false)
+  const [otpSending, setOtpSending] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [loginSuccess, setLoginSuccess] = useState<string | null>(null)
@@ -170,33 +171,35 @@ export function PartnerLogin() {
 
     setLoginError(null)
     setLoginSuccess(null)
+    setOtpSending(true)
 
-    const result = await loginPartner({
-      identifier: identifier!.replace(/\.+$/, ''),
-      mode: 'otp_request',
-    })
+    try {
+      const result = await loginPartner({
+        identifier: identifier!.replace(/\.+$/, ''),
+        mode: 'otp_request',
+      })
 
-    if (!result.ok) {
-      const message = result.error ?? 'Could not send OTP.'
-      setLoginError(message)
-      showError(message)
-      return
+      if (!result.ok) {
+        const message = result.error ?? 'Could not send OTP.'
+        setLoginError(message)
+        showError(message)
+        return
+      }
+
+      setOtpRequested(true)
+      const parts: string[] = []
+      if (result.email_sent && result.email_hint) parts.push(`email ${result.email_hint}`)
+      if (result.phone_hint) parts.push(`registered mobile ${result.phone_hint}`)
+      const where =
+        parts.length > 0
+          ? `OTP sent to ${parts.join(' · ')}.`
+          : result.message ?? 'OTP sent.'
+      const otpMessage = `${where} Check your email inbox (and spam) for the code.`
+      setLoginSuccess(otpMessage)
+      showSuccess(otpMessage)
+    } finally {
+      setOtpSending(false)
     }
-
-    setOtpRequested(true)
-    const parts: string[] = []
-    if (result.email_sent && result.email_hint) parts.push(`email ${result.email_hint}`)
-    if (result.phone_hint) parts.push(`registered mobile ${result.phone_hint}`)
-    const where =
-      parts.length > 0
-        ? `OTP sent to ${parts.join(' · ')}.`
-        : result.message ?? 'OTP sent.'
-    const bypass = result.phone_bypass_otp || result.dev_otp
-    const otpMessage = bypass
-      ? `${where} Check email for the real code. Phone/SMS bypass (until SMS gateway): ${bypass}.`
-      : `${where} Check your email inbox for the code.`
-    setLoginSuccess(otpMessage)
-    showSuccess(otpMessage)
   }
 
   const onOtpLogin = async () => {
@@ -445,11 +448,11 @@ export function PartnerLogin() {
                 <button
                   type="button"
                   onClick={onRequestOtp}
-                  disabled={isSubmitting || redirecting}
+                  disabled={isSubmitting || redirecting || otpSending}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-700 py-3 text-sm font-semibold text-white shadow-md shadow-brand-900/25 transition hover:bg-brand-800 disabled:opacity-70"
                 >
                   <KeyRound className="h-4 w-4" />
-                  Continue with OTP
+                  {otpSending ? 'Sending OTP…' : 'Continue with OTP'}
                 </button>
               ) : (
                 <button

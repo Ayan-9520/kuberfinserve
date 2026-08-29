@@ -21,6 +21,10 @@ public/api/config.php
 deploy/config.php
 dist/api/config.php
 hostinger-upload.zip
+HOSTINGER-UPLOAD/
+HOSTINGER-UPLOAD.zip
+kuberfinserve-hostinger-FULL.zip
+hostinger-hotfix/
 
 # Local dev leads (npm run dev)
 server/data/leads.json

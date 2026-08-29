@@ -4,7 +4,6 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { HERO_TRUST_BADGES } from '@/data/homePremium'
 import { SITE } from '@/data/site'
 import { HeroLoanVisual } from '@/components/home/premium/HeroLoanVisual'
-import { PlatformLogo } from '@/components/PlatformLogo'
 
 export function HeroSection() {
   return (
@@ -18,19 +17,18 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55 }}
         >
-          <div className="flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-2 rounded-full border border-brand-200/70 bg-white/95 py-1 pl-1.5 pr-3.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-800 shadow-sm">
             <img
-              src={SITE.logoUrl}
-              alt={SITE.name}
-              className="h-9 w-auto object-contain md:h-10"
+              src={SITE.platformLogoClearUrl}
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-md object-contain"
+              loading="eager"
+              decoding="async"
             />
-            <span className="inline-flex items-center gap-2 rounded-full border border-brand-200/80 bg-white/90 py-1 pl-1 pr-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-800 shadow-sm">
-              <span className="inline-flex rounded-md bg-white p-0.5 ring-1 ring-slate-100">
-                <PlatformLogo size="sm" nameBelow={false} />
-              </span>
-              Powered by {SITE.platformName}
-            </span>
-          </div>
+            Powered by {SITE.platformName}
+          </span>
 
           <h1 className="mt-5 max-w-xl font-heading text-[1.85rem] font-bold leading-[1.18] tracking-tight text-navy-900 sm:text-3xl md:text-[2.15rem] lg:text-[2.35rem]">
             Build your financial business with{' '}
