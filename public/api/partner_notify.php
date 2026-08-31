@@ -156,3 +156,15 @@ function api_partner_send_otp_sms(string $phone, string $otp, array $config): bo
         $config,
     );
 }
+
+function api_partner_send_otp_email(string $email, string $otp, array $config): bool
+{
+    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+    $site = $config['site_name'] ?? 'KuberFinserve';
+    $subject = "{$site} — Partner login OTP";
+    $body = "Your one-time password for Partner Login is: {$otp}\n\n";
+    $body .= "Valid for 10 minutes. Do not share this code.\n\nRegards,\n{$site} Team\n";
+    return api_send_mail($email, $subject, $body, $config, $config['leads_email'] ?? null);
+}

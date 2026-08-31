@@ -39,6 +39,9 @@ if (
     $kAuth = api_kuberone_partner_otp($config, $mode, $identifier, $otp);
     if (!empty($kAuth['skipped'])) {
         // fall through to Hostinger partner auth
+    } elseif (!$kAuth['ok'] && api_kuberone_is_transport_error($kAuth)) {
+        error_log('[partner-login] KuberOne unreachable, using Hostinger fallback: ' . ($kAuth['error'] ?? ''));
+        // fall through to Hostinger partner auth
     } elseif (!$kAuth['ok']) {
         api_json_response(['ok' => false, 'error' => $kAuth['error'] ?? 'KuberOne login failed'], 401);
     } elseif ($mode === 'otp_request') {
@@ -100,10 +103,14 @@ try {
         $upd->execute(['hash' => $otpHash, 'exp' => $expires, 'id' => $partnerRowId]);
 
         api_partner_send_otp_sms($partner['phone'], $otpCode, $config);
+        $email = strtolower(trim((string) ($partner['email'] ?? '')));
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            api_partner_send_otp_email($email, $otpCode, $config);
+        }
 
         api_json_response([
             'ok' => true,
-            'message' => 'OTP sent to your registered mobile number.',
+            'message' => 'OTP sent to your registered mobile number' . ($email !== '' ? ' and email.' : '.'),
             'otp_sent' => true,
         ]);
     }

@@ -2,17 +2,26 @@
 
 declare(strict_types=1);
 
-/**
- * Dual-write bridge: Hostinger CRM → KuberOne Admin API.
- * Failures are logged only — local MySQL + email remain source of truth for the website.
- */
+
+function api_kuberone_normalize_base(string $base): string
+{
+    $base = trim($base);
+    if ($base === '') {
+        return '';
+    }
+    // Hostinger config typos: leading space, missing scheme, admin SPA host used by mistake
+    if (!preg_match('#^https?://#i', $base)) {
+        $base = 'https://' . ltrim($base, '/');
+    }
+    return rtrim($base, '/');
+}
 
 function api_kuberone_enabled(array $config): bool
 {
     if (empty($config['kuberone_bridge_enabled'])) {
         return false;
     }
-    $base = trim((string) ($config['kuberone_api_base'] ?? ''));
+    $base = api_kuberone_normalize_base((string) ($config['kuberone_api_base'] ?? ''));
     if ($base === '') {
         return false;
     }
@@ -21,6 +30,33 @@ function api_kuberone_enabled(array $config): bool
         return false;
     }
     return true;
+}
+
+/** True when KuberOne bridge is unreachable (bad URL, tunnel down) — safe to fall back locally. */
+function api_kuberone_is_transport_error(array $result): bool
+{
+    $err = strtolower((string) ($result['error'] ?? ''));
+    if ($err === '') {
+        return false;
+    }
+    foreach ([
+        'url rejected',
+        'malformed',
+        'could not resolve',
+        'connection refused',
+        'connection timed out',
+        'timed out',
+        'curl failed',
+        'not configured',
+        'failed to connect',
+        'no route to host',
+        'ssl',
+    ] as $needle) {
+        if (str_contains($err, $needle)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /** Recursively drop null / empty-string values (Zod rejects null on optional fields). */
@@ -44,12 +80,15 @@ function api_kuberone_strip_nulls(mixed $value): mixed
  */
 function api_kuberone_request(array $config, string $method, string $path, array $payload, int $timeoutSeconds = 30): array
 {
-    $base = rtrim((string) ($config['kuberone_api_base'] ?? ''), '/');
+    $base = api_kuberone_normalize_base((string) ($config['kuberone_api_base'] ?? ''));
     if ($base === '') {
         return ['ok' => false, 'error' => 'kuberone_api_base not configured'];
     }
 
     $url = $base . $path;
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        return ['ok' => false, 'error' => 'KuberOne API URL is invalid. Check kuberone_api_base in config.php (must be https://...).'];
+    }
     $headers = [
         'Content-Type: application/json',
         'Accept: application/json',
@@ -87,7 +126,11 @@ function api_kuberone_request(array $config, string $method, string $path, array
         curl_close($ch);
 
         if ($raw === false) {
-            return ['ok' => false, 'error' => $err ?: 'curl failed', 'status' => $status];
+            $friendly = $err ?: 'curl failed';
+            if (stripos($friendly, 'URL rejected') !== false || stripos($friendly, 'Malformed') !== false) {
+                $friendly = 'KuberOne API URL is invalid. Update kuberone_api_base in config.php (include https://, no leading spaces).';
+            }
+            return ['ok' => false, 'error' => $friendly, 'status' => $status];
         }
 
         $decoded = json_decode($raw, true);
@@ -133,7 +176,7 @@ function api_kuberone_request(array $config, string $method, string $path, array
  */
 function api_kuberone_request_auth_get(array $config, string $path, string $accessToken): array
 {
-    $base = rtrim((string) ($config['kuberone_api_base'] ?? ''), '/');
+    $base = api_kuberone_normalize_base((string) ($config['kuberone_api_base'] ?? ''));
     if ($base === '') {
         return ['ok' => false, 'error' => 'kuberone_api_base not configured'];
     }
@@ -288,6 +331,9 @@ function api_kuberone_sync_partner(array $config, array $partner): array
         'status' => $result['status'] ?? 201,
         'duplicate' => $duplicate,
         'partnerCode' => is_string($partnerCode) ? $partnerCode : null,
+        'partnerStatus' => is_string($result['body']['data']['partner']['status'] ?? null)
+            ? $result['body']['data']['partner']['status']
+            : null,
     ];
 }
 
