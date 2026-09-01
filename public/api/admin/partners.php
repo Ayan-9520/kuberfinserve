@@ -135,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['par
                         'UPDATE partners SET status = :status, rejected_at = NOW(), rejected_by = :by WHERE id = :id',
                     );
                     $upd->execute(['status' => 'rejected', 'by' => $adminUser, 'id' => $rowId]);
+                    api_partner_notify_rejected($partner, $config);
                     api_partner_log_audit($pdo, $rowId, 'rejected', $oldStatus, 'rejected', $adminUser, null);
                     $flash = "Partner #{$rowId} rejected.";
                 } elseif ($action === 'suspend') {
