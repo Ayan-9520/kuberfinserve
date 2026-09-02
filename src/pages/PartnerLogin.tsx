@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
@@ -17,7 +17,7 @@ import { SeoHead } from '@/components/SeoHead'
 import { JsonLd } from '@/components/JsonLd'
 import { useToast } from '@/components/ui/Toast'
 import { loginPartner } from '@/utils/submitPartnerApi'
-import { getPartnerToken, getPartnerProfile, savePartnerSession } from '@/utils/partnerAuth'
+import { getPartnerToken, getPartnerProfile, getPartnerRefreshToken, hasPartnerSession, savePartnerSession } from '@/utils/partnerAuth'
 import { PlatformLogo } from '@/components/PlatformLogo'
 import { cn } from '@/utils/cn'
 
@@ -110,11 +110,21 @@ export function PartnerLogin() {
     const token = getPartnerToken()
     const profile = getPartnerProfile()
     if (token && profile?.partner_id) {
-      redirectToPartnerPortalSso(token, null, profile.partner_id)
+      redirectToPartnerPortalSso(token, getPartnerRefreshToken(), profile.partner_id)
       return
     }
     window.location.assign(`${SITE.partnerPortalUrl.replace(/\/$/, '')}/login`)
   }
+
+  // Already logged in on this browser — skip OTP and open partner dashboard.
+  useEffect(() => {
+    if (!hasPartnerSession()) return
+    const token = getPartnerToken()
+    const profile = getPartnerProfile()
+    if (!token || !profile?.partner_id) return
+    setRedirecting(true)
+    redirectToPartnerPortalSso(token, getPartnerRefreshToken(), profile.partner_id)
+  }, [])
 
   const onPasswordLogin = async (data: LoginFormData) => {
     setLoginError(null)
@@ -140,14 +150,18 @@ export function PartnerLogin() {
       return
     }
 
-    savePartnerSession(result.token, {
-      id: result.partner.id,
-      partner_id: result.partner.partner_id,
-      full_name: result.partner.full_name,
-      email: result.partner.email,
-      phone: result.partner.phone,
-      status: result.partner.status,
-    })
+    savePartnerSession(
+      result.token,
+      {
+        id: result.partner.id,
+        partner_id: result.partner.partner_id,
+        full_name: result.partner.full_name,
+        email: result.partner.email,
+        phone: result.partner.phone,
+        status: result.partner.status,
+      },
+      result.refresh_token,
+    )
 
     const successMessage = result.must_change_password
       ? 'Login successful. Please change your temporary password in the app.'
@@ -235,14 +249,18 @@ export function PartnerLogin() {
       return
     }
 
-    savePartnerSession(result.token, {
-      id: result.partner.id,
-      partner_id: result.partner.partner_id,
-      full_name: result.partner.full_name,
-      email: result.partner.email,
-      phone: result.partner.phone,
-      status: result.partner.status,
-    })
+    savePartnerSession(
+      result.token,
+      {
+        id: result.partner.id,
+        partner_id: result.partner.partner_id,
+        full_name: result.partner.full_name,
+        email: result.partner.email,
+        phone: result.partner.phone,
+        status: result.partner.status,
+      },
+      result.refresh_token,
+    )
 
     const codeHint = result.partner.partner_id
       ? ` Partner Code: ${result.partner.partner_id}.`
