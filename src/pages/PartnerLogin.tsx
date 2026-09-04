@@ -227,7 +227,7 @@ export function PartnerLogin() {
       return
     }
     if (!otp || otp.length !== 6) {
-      const message = 'Please enter the 6-digit OTP from your email (or phone bypass 123456).'
+      const message = 'Please enter the 6-digit OTP sent to your mobile / email.'
       setLoginError(message)
       showError(message)
       return
@@ -429,8 +429,7 @@ export function PartnerLogin() {
                     className={cn(inputClass, 'tracking-[0.2em]')}
                   />
                   <p className="mt-1.5 text-[11px] text-slate-400">
-                    Real OTP goes to your registered email. Until SMS is purchased, you can also use
-                    phone bypass <strong>123456</strong>.
+                    OTP is sent to your registered mobile (SMS) and email. Enter the 6-digit code.
                   </p>
                 </div>
               )}
